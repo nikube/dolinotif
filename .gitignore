@@ -1,0 +1,7 @@
+*.log
+*.bak
+*~
+.DS_Store
+Thumbs.db
+conf/conf.php
+documents/

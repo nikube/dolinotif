@@ -1,0 +1,31 @@
+# Copyright (C) 2026 DoliNotif contributors
+# License: GPL v3 + Commons Clause
+#
+# DoliNotif — English translation
+
+ModuleDoliNotifName=DoliNotif
+ModuleDoliNotifDesc=In-app notification center (bell icon, badge, dropdown, toast)
+
+DoliNotifNotifications=Notifications
+DoliNotifMarkAllAsRead=Mark all as read
+DoliNotifNoNotifications=No notifications
+DoliNotifLoading=Loading...
+DoliNotifViewAll=View all
+DoliNotifJustNow=just now
+DoliNotifMinutesAgo=min ago
+DoliNotifHoursAgo=h ago
+DoliNotifDaysAgo=d ago
+
+DoliNotifSetupTitle=DoliNotif — setup
+DoliNotifPollingInterval=Polling interval (seconds)
+DoliNotifPollingIntervalHelp=How often the browser checks for new notifications (minimum 5s).
+DoliNotifRetentionDays=Retention (days)
+DoliNotifRetentionDaysHelp=Read notifications older than this are auto-purged by the daily cron job.
+DoliNotifMaxDropdown=Max items in dropdown
+DoliNotifMaxDropdownHelp=Maximum number of notifications displayed in the bell dropdown.
+DoliNotifBellPosition=Bell icon position
+DoliNotifBellPositionHelp=Where to place the bell in the top menu.
+DoliNotifPosBeforeUser=Before user menu
+DoliNotifPosAfterBookmark=After bookmark icon
+
+DoliNotifPurgeCronLabel=DoliNotif auto-purge (delete old read notifications)

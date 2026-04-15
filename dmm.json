@@ -1,0 +1,23 @@
+{
+  "schema_version": "1",
+  "module_id": "dolinotif",
+  "name": "DoliNotif",
+  "description": "In-app notification center for Dolibarr. Bell icon, badge counter, dropdown and toasts. Other modules push notifications through a single public function.",
+  "author": "Anatole Consulting",
+  "url": "https://github.com/nikube/dolinotif",
+  "license": "GPL-3.0-or-later",
+  "dolibarr_module_id": 500200,
+  "branch": "main",
+  "branch_dev": "develop",
+  "compatibility": {
+    "0.x": {
+      "dolibarr_min": "18.0.0",
+      "dolibarr_max": "24.*",
+      "php_min": "7.4"
+    }
+  },
+  "dependencies": {
+    "modules": [],
+    "php_extensions": []
+  }
+}
