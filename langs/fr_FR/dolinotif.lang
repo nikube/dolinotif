@@ -29,3 +29,5 @@ DoliNotifPosBeforeUser=Avant le menu utilisateur
 DoliNotifPosAfterBookmark=Après l'icône favori
 
 DoliNotifPurgeCronLabel=DoliNotif purge automatique (suppression des notifications lues anciennes)
+ErrorBadToken=Mauvais jeton de sécurité
+ErrorOnSave=Erreur lors de l'enregistrement

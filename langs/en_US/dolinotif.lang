@@ -29,3 +29,5 @@ DoliNotifPosBeforeUser=Before user menu
 DoliNotifPosAfterBookmark=After bookmark icon
 
 DoliNotifPurgeCronLabel=DoliNotif auto-purge (delete old read notifications)
+ErrorBadToken=Invalid security token
+ErrorOnSave=Save error
