@@ -140,8 +140,39 @@ class modDoliNotif extends DolibarrModules
 		// No specific rights — anyone logged in can see their own notifications
 		$this->rights = array();
 
-		// No menu entries (bell icon is injected via hook)
+		// Menu entries — sits under Home → Admin tools next to the other
+		// three custom modules. The bell icon injected via hook remains the
+		// primary user-facing entry point; this menu is for admin setup.
 		$this->menu = array();
+		$r = 0;
+		$this->menu[$r++] = array(
+			'fk_menu'   => 'fk_mainmenu=home,fk_leftmenu=admintools',
+			'type'      => 'left',
+			'titre'     => 'DoliNotif',
+			'mainmenu'  => 'home',
+			'leftmenu'  => 'dolinotif',
+			'url'       => '/custom/dolinotif/admin/setup.php',
+			'langs'     => 'dolinotif@dolinotif',
+			'position'  => 120,
+			'enabled'   => "isModEnabled('dolinotif')",
+			'perms'     => '$user->admin',
+			'target'    => '',
+			'user'      => 2,
+		);
+		$this->menu[$r++] = array(
+			'fk_menu'   => 'fk_mainmenu=home,fk_leftmenu=dolinotif',
+			'type'      => 'left',
+			'titre'     => 'Settings',
+			'mainmenu'  => 'home',
+			'leftmenu'  => 'dolinotif_setup',
+			'url'       => '/custom/dolinotif/admin/setup.php',
+			'langs'     => 'dolinotif@dolinotif',
+			'position'  => 121,
+			'enabled'   => "isModEnabled('dolinotif')",
+			'perms'     => '$user->admin',
+			'target'    => '',
+			'user'      => 2,
+		);
 	}
 
 	/**
