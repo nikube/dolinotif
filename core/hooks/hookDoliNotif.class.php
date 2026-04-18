@@ -125,12 +125,10 @@ class ActionsDolinotif extends CommonHookActions
 			.' data-polling="'.(int) getDolGlobalInt('DOLINOTIF_POLLING_INTERVAL', 30).'"'
 			.' data-max="'.(int) getDolGlobalInt('DOLINOTIF_MAX_DROPDOWN', 15).'">';
 
-		// Bell button
+		// Bell button — use Dolibarr-standard classes (atoplogin valignmiddle)
+		// so it aligns with the other top-right icons (bookmarks, help, logout).
 		$html .= '<a href="#" class="login dolinotif-bell" id="dolinotif-bell" title="'.dol_escape_htmltag($langs->trans('DoliNotifNotifications')).'">';
-		$html .= '<span class="dolinotif-bell-icon" aria-hidden="true">';
-		// Inline SVG bell — no external asset required
-		$html .= '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
-		$html .= '</span>';
+		$html .= '<span class="fa fa-bell atoplogin valignmiddle" aria-hidden="true"></span>';
 		$html .= '<span class="dolinotif-badge" id="dolinotif-badge"'.$badgeDisplay.'>'.dol_escape_htmltag($badgeLabel).'</span>';
 		$html .= '</a>';
 
