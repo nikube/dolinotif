@@ -52,7 +52,7 @@ class modDoliNotif extends DolibarrModules
 		$this->db = $db;
 
 		// Reserved range 185150–185169 (Anatole Conseil) — see https://wiki.dolibarr.org/index.php/List_of_modules_id
-		$this->numero = 185151;
+		$this->numero = 185156;
 		$this->rights_class = 'dolinotif';
 		$this->family = "interface";
 		$this->module_position = '50';
