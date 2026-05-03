@@ -6,7 +6,7 @@
   "author": "Anatole Consulting",
   "url": "https://github.com/nikube/dolinotif",
   "license": "GPL-3.0-or-later",
-  "dolibarr_module_id": 500200,
+  "dolibarr_module_id": 185151,
   "branch": "main",
   "branch_dev": "develop",
   "compatibility": {
