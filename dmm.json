@@ -10,10 +10,10 @@
   "branch": "main",
   "branch_dev": "develop",
   "compatibility": {
-    "0.x": {
-      "dolibarr_min": "18.0.0",
+    "1.x": {
+      "dolibarr_min": "23.0.0",
       "dolibarr_max": "24.*",
-      "php_min": "7.4"
+      "php_min": "8.1"
     }
   },
   "dependencies": {

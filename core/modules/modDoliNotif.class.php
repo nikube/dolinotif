@@ -69,17 +69,8 @@ class modDoliNotif extends DolibarrModules
 		$this->picto = 'bell';
 
 		$this->module_parts = array(
-			'triggers' => 0,
-			'login' => 0,
-			'substitutions' => 0,
-			'menus' => 0,
-			'tpl' => 0,
-			'barcode' => 0,
-			'models' => 0,
-			'printing' => 0,
-			'theme' => 0,
-			'css' => array('/custom/dolinotif/css/dolinotif.css.php'),
-			'js'  => array('/custom/dolinotif/js/dolinotif.js'),
+			'css' => array('/dolinotif/css/dolinotif.css'),
+			'js'  => array('/dolinotif/js/dolinotif.js'),
 			'hooks' => array(
 				'data' => array(
 					'main',
@@ -101,8 +92,8 @@ class modDoliNotif extends DolibarrModules
 
 		$this->langfiles = array("dolinotif@dolinotif");
 
-		$this->phpmin = array(7, 2);
-		$this->need_dolibarr_version = array(18, 0);
+		$this->phpmin = array(8, 1);
+		$this->need_dolibarr_version = array(23, 0);
 		$this->need_javascript_ajax = 1;
 
 		$this->warnings_activation = array();
@@ -113,7 +104,6 @@ class modDoliNotif extends DolibarrModules
 			0 => array('DOLINOTIF_POLLING_INTERVAL', 'chaine', '30', 'Polling interval in seconds', 0, 'current', 0),
 			1 => array('DOLINOTIF_RETENTION_DAYS', 'chaine', '90', 'Auto-purge read notifications older than X days', 0, 'current', 0),
 			2 => array('DOLINOTIF_MAX_DROPDOWN', 'chaine', '15', 'Max items shown in dropdown', 0, 'current', 0),
-			3 => array('DOLINOTIF_BELL_POSITION', 'chaine', 'before_user', 'Bell icon position (before_user | after_bookmark)', 0, 'current', 0),
 		);
 
 		$this->tabs = array();

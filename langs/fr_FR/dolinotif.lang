@@ -23,10 +23,6 @@ DoliNotifRetentionDays=Rétention (jours)
 DoliNotifRetentionDaysHelp=Les notifications lues plus anciennes sont supprimées automatiquement par le cron quotidien.
 DoliNotifMaxDropdown=Nombre max dans le menu
 DoliNotifMaxDropdownHelp=Nombre maximum de notifications affichées dans le menu déroulant de la cloche.
-DoliNotifBellPosition=Position de la cloche
-DoliNotifBellPositionHelp=Emplacement de la cloche dans le menu supérieur.
-DoliNotifPosBeforeUser=Avant le menu utilisateur
-DoliNotifPosAfterBookmark=Après l'icône favori
 
 DoliNotifPurgeCronLabel=DoliNotif purge automatique (suppression des notifications lues anciennes)
 ErrorBadToken=Mauvais jeton de sécurité

@@ -23,10 +23,6 @@ DoliNotifRetentionDays=Retention (days)
 DoliNotifRetentionDaysHelp=Read notifications older than this are auto-purged by the daily cron job.
 DoliNotifMaxDropdown=Max items in dropdown
 DoliNotifMaxDropdownHelp=Maximum number of notifications displayed in the bell dropdown.
-DoliNotifBellPosition=Bell icon position
-DoliNotifBellPositionHelp=Where to place the bell in the top menu.
-DoliNotifPosBeforeUser=Before user menu
-DoliNotifPosAfterBookmark=After bookmark icon
 
 DoliNotifPurgeCronLabel=DoliNotif auto-purge (delete old read notifications)
 ErrorBadToken=Invalid security token

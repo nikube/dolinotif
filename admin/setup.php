@@ -74,11 +74,10 @@ $constants = array(
 	'DOLINOTIF_POLLING_INTERVAL' => array('type' => 'int',    'default' => 30,             'min' => 5),
 	'DOLINOTIF_RETENTION_DAYS'   => array('type' => 'int',    'default' => 90,             'min' => 1),
 	'DOLINOTIF_MAX_DROPDOWN'     => array('type' => 'int',    'default' => 15,             'min' => 1),
-	'DOLINOTIF_BELL_POSITION'    => array('type' => 'select', 'default' => 'before_user',  'options' => array('before_user', 'after_bookmark')),
 );
 
 if ($action === 'update' && !empty($_POST)) {
-	if (!verifCsrf(GETPOST('token', 'alpha'))) {
+	if (empty($_SESSION['newtoken']) || GETPOST('token', 'alpha') !== $_SESSION['newtoken']) {
 		setEventMessages($langs->trans('ErrorBadToken'), null, 'errors');
 	} else {
 		$error = 0;
@@ -88,10 +87,6 @@ if ($action === 'update' && !empty($_POST)) {
 				$val = (int) $val;
 				if (isset($def['min']) && $val < $def['min']) {
 					$val = $def['min'];
-				}
-			} elseif ($def['type'] === 'select') {
-				if (!in_array($val, $def['options'], true)) {
-					$val = $def['default'];
 				}
 			}
 			$r = dolibarr_set_const($db, $name, $val, 'chaine', 0, '', $conf->entity);
@@ -107,32 +102,6 @@ if ($action === 'update' && !empty($_POST)) {
 	}
 	header('Location: '.$_SERVER['PHP_SELF']);
 	exit;
-}
-
-/*
- * Verify CSRF token shim (Dolibarr exposes newToken()/verifCsrfFromPost in many versions,
- * fall back to manual check if helper absent).
- */
-if (!function_exists('verifCsrf')) {
-	/**
-	 *	Minimal CSRF token check compatible across Dolibarr versions.
-	 *
-	 *	@param	string	$token	Submitted token
-	 *	@return	bool
-	 */
-	function verifCsrf($token)
-	{
-		if (empty($token)) {
-			return false;
-		}
-		if ($token === newToken()) {
-			return true;
-		}
-		if (!empty($_SESSION['token']) && $token === $_SESSION['token']) {
-			return true;
-		}
-		return false;
-	}
 }
 
 $title = $langs->trans('DoliNotifSetupTitle');
@@ -174,19 +143,6 @@ print '<tr class="oddeven">';
 print '<td>'.$langs->trans('DoliNotifMaxDropdown').'</td>';
 print '<td><input type="number" min="1" name="DOLINOTIF_MAX_DROPDOWN" value="'.(int) $v.'" class="width75"></td>';
 print '<td class="opacitymedium">'.$langs->trans('DoliNotifMaxDropdownHelp').'</td>';
-print '</tr>';
-
-// DOLINOTIF_BELL_POSITION
-$pos = getDolGlobalString('DOLINOTIF_BELL_POSITION') ? getDolGlobalString('DOLINOTIF_BELL_POSITION') : 'before_user';
-print '<tr class="oddeven">';
-print '<td>'.$langs->trans('DoliNotifBellPosition').'</td>';
-print '<td>';
-print '<select name="DOLINOTIF_BELL_POSITION">';
-print '<option value="before_user"'.($pos === 'before_user' ? ' selected' : '').'>'.$langs->trans('DoliNotifPosBeforeUser').'</option>';
-print '<option value="after_bookmark"'.($pos === 'after_bookmark' ? ' selected' : '').'>'.$langs->trans('DoliNotifPosAfterBookmark').'</option>';
-print '</select>';
-print '</td>';
-print '<td class="opacitymedium">'.$langs->trans('DoliNotifBellPositionHelp').'</td>';
 print '</tr>';
 
 print '</table>';

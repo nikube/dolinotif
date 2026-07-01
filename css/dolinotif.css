@@ -1,22 +1,3 @@
-<?php
-/* Copyright (C) 2026 DoliNotif contributors
- * License: GPL v3 + Commons Clause
- * SPDX-License-Identifier: GPL-3.0-or-later WITH Commons-Clause
- */
-
-/**
- *	\file       css/dolinotif.css.php
- *	\ingroup    dolinotif
- *	\brief      DoliNotif stylesheet.
- *
- *  Served without a Dolibarr bootstrap on purpose: every rule below is static,
- *  pulling main.inc.php on a CSS request cost a DB connection per asset and
- *  could 500 the stylesheet under NOREQUIRE* flags on some Dolibarr versions.
- */
-
-header('Content-Type: text/css');
-header('Cache-Control: max-age=3600');
-?>
 
 /* ---------- Bell in the top menu ----------
  * The bell itself uses Dolibarr's stock `atoplogin valignmiddle` classes

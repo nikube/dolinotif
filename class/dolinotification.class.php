@@ -127,47 +127,6 @@ class DoliNotification
 	}
 
 	/**
-	 *	Fetch a single notification by rowid (owned by $fk_user and $entity).
-	 *
-	 *	@param	int		$id			Notification rowid
-	 *	@param	int		$fk_user	Owner user id (security filter)
-	 *	@param	int		$entity		Entity (security filter)
-	 *	@return	int					>0 OK, 0 not found, <0 error
-	 */
-	public function fetch($id, $fk_user, $entity)
-	{
-		$sql = "SELECT rowid, entity, fk_user, type, category, title, message, url, element_type, fk_element, is_read, date_creation, date_read";
-		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
-		$sql .= " WHERE rowid = ".(int) $id;
-		$sql .= " AND fk_user = ".(int) $fk_user;
-		$sql .= " AND entity = ".(int) $entity;
-
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-		if (!$this->db->num_rows($resql)) {
-			return 0;
-		}
-		$obj = $this->db->fetch_object($resql);
-		$this->id = (int) $obj->rowid;
-		$this->entity = (int) $obj->entity;
-		$this->fk_user = (int) $obj->fk_user;
-		$this->type = $obj->type;
-		$this->category = $obj->category;
-		$this->title = $obj->title;
-		$this->message = $obj->message;
-		$this->url = $obj->url;
-		$this->element_type = $obj->element_type;
-		$this->fk_element = $obj->fk_element !== null ? (int) $obj->fk_element : null;
-		$this->is_read = (int) $obj->is_read;
-		$this->date_creation = $this->db->jdate($obj->date_creation);
-		$this->date_read = $obj->date_read ? $this->db->jdate($obj->date_read) : null;
-		return 1;
-	}
-
-	/**
 	 *	Mark one notification as read (security-scoped).
 	 *
 	 *	@param	int		$id			Notification rowid
