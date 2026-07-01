@@ -140,11 +140,17 @@
 			if (!toastCt) return;
 			var t = document.createElement('div');
 			t.className = 'dolinotif-toast ' + (item.type || 'info');
-			var h = '<div class="dolinotif-toast-title">' + escapeHtml(item.title || '') + '</div>';
+			var h = '<button type="button" class="dolinotif-toast-close" aria-label="&times;">&times;</button>';
+			h += '<div class="dolinotif-toast-title">' + escapeHtml(item.title || '') + '</div>';
 			if (item.message) {
 				h += '<div class="dolinotif-toast-msg">' + escapeHtml(item.message) + '</div>';
 			}
 			t.innerHTML = h;
+			t.querySelector('.dolinotif-toast-close').addEventListener('click', function (e) {
+				// Dismiss the toast only — the item stays unread on the bell.
+				e.stopPropagation();
+				if (t.parentNode) t.parentNode.removeChild(t);
+			});
 			t.addEventListener('click', function () {
 				if (item.url) {
 					markRead(item.rowid, function () { window.location.href = item.url; });
@@ -154,9 +160,8 @@
 				}
 			});
 			toastCt.appendChild(t);
-			setTimeout(function () {
-				if (t.parentNode) t.parentNode.removeChild(t);
-			}, 5000);
+			// Persistent by design: toasts stack in the container and stay on
+			// screen until dismissed (close button, click-through, or mark-read).
 		}
 
 		/* ------------ dropdown rendering ------------ */
