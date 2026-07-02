@@ -41,9 +41,11 @@
 
 /* ---------- Dropdown ---------- */
 .dolinotif-dropdown {
-	position: absolute;
-	top: 100%;
-	right: 0;
+	/* Fixed to the viewport: clears the nav bar (top set by JS from the
+	 * bell's position) and hugs the right edge of the screen. */
+	position: fixed;
+	top: 60px; /* fallback — recomputed on open */
+	right: 8px;
 	width: 440px;
 	max-width: 94vw;
 	background: #fff;
@@ -55,7 +57,6 @@
 	box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18), 0 3px 10px rgba(15, 23, 42, 0.08);
 	overflow: hidden;
 	z-index: 10000;
-	margin-top: 10px;
 	text-align: left;
 	transform-origin: top right;
 	animation: dolinotif-unfold 0.45s cubic-bezier(0.16, 1, 0.3, 1);

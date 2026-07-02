@@ -166,9 +166,18 @@
 				if (autoCloseTimer) armAutoClose();
 				return;
 			}
+			positionDropdown();
 			dropdown.style.display = 'block';
 			loadList();
 			armAutoClose();
+		}
+
+		// The drawer is position:fixed (so it can hug the viewport's right
+		// edge below the nav bar); align its top just under the bell.
+		function positionDropdown() {
+			if (!dropdown || !bell) return;
+			var r = bell.getBoundingClientRect();
+			dropdown.style.top = Math.round(r.bottom + 12) + 'px';
 		}
 
 		/* ------------ dropdown rendering ------------ */
@@ -212,6 +221,7 @@
 		function openDropdown() {
 			if (!dropdown) return;
 			if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
+			positionDropdown();
 			dropdown.style.display = 'block';
 			loadList();
 			// Opening the panel = notifications seen. The list just rendered
