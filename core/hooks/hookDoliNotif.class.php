@@ -148,12 +148,9 @@ class ActionsDolinotif extends CommonHookActions
 		$html .= '</span>';
 		$html .= '</a>';
 
-		// Dropdown (populated by JS). No "mark all read" button: opening the
-		// panel marks everything as read (JS).
+		// Dropdown (populated by JS). No header: the list speaks for itself,
+		// and opening the panel marks everything as read (JS).
 		$html .= '<div class="dolinotif-dropdown" id="dolinotif-dropdown" style="display:none;">';
-		$html .= '  <div class="dolinotif-dropdown-header">';
-		$html .= '    <span class="dolinotif-title">'.dol_escape_htmltag($langs->trans('DoliNotifNotifications')).'</span>';
-		$html .= '  </div>';
 		$html .= '  <div class="dolinotif-list" id="dolinotif-list">';
 		$html .= '    <div class="dolinotif-empty">'.dol_escape_htmltag($langs->trans('DoliNotifLoading')).'</div>';
 		$html .= '  </div>';
