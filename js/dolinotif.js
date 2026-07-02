@@ -109,9 +109,15 @@
 			// server/browser timezone offset.
 			var diff = ageSeconds | 0;
 			if (diff < 60) return LABELS.now;
-			if (diff < 3600) return LABELS.minutesAgo.replace('%s', String(Math.floor(diff / 60)));
-			if (diff < 86400) return LABELS.hoursAgo.replace('%s', String(Math.floor(diff / 3600)));
-			return LABELS.daysAgo.replace('%s', String(Math.floor(diff / 86400)));
+			if (diff < 3600) return fmtRel(LABELS.minutesAgo, Math.floor(diff / 60));
+			if (diff < 86400) return fmtRel(LABELS.hoursAgo, Math.floor(diff / 3600));
+			return fmtRel(LABELS.daysAgo, Math.floor(diff / 86400));
+		}
+
+		function fmtRel(tpl, n) {
+			if (tpl.indexOf('__N__') !== -1) return tpl.replace('__N__', String(n));
+			if (tpl.indexOf('%s') !== -1) return tpl.replace('%s', String(n));
+			return String(n) + ' ' + tpl;
 		}
 
 		function typeIcon(type) {
@@ -177,7 +183,7 @@
 		function positionDropdown() {
 			if (!dropdown || !bell) return;
 			var r = bell.getBoundingClientRect();
-			dropdown.style.top = Math.round(r.bottom + 12) + 'px';
+			dropdown.style.top = Math.round(r.bottom + 22) + 'px';
 		}
 
 		/* ------------ dropdown rendering ------------ */

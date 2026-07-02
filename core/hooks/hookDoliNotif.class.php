@@ -123,9 +123,11 @@ class ActionsDolinotif extends CommonHookActions
 			'noNotifications'   => $langs->transnoentities('DoliNotifNoNotifications'),
 			'loadError'         => $langs->transnoentities('DoliNotifLoadError'),
 			'now'               => $langs->transnoentities('DoliNotifJustNow'),
-			'minutesAgo'        => $langs->transnoentities('DoliNotifMinutesAgo'),
-			'hoursAgo'          => $langs->transnoentities('DoliNotifHoursAgo'),
-			'daysAgo'           => $langs->transnoentities('DoliNotifDaysAgo'),
+			// trans() sprintf's %s away even with no params — feed it a
+			// placeholder the JS substitutes with the computed number.
+			'minutesAgo'        => $langs->transnoentities('DoliNotifMinutesAgo', '__N__'),
+			'hoursAgo'          => $langs->transnoentities('DoliNotifHoursAgo', '__N__'),
+			'daysAgo'           => $langs->transnoentities('DoliNotifDaysAgo', '__N__'),
 			'moreNotifications' => $langs->transnoentities('DoliNotifMore'),
 		));
 

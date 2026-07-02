@@ -11,10 +11,6 @@ DoliNotifMarkAllAsRead=Tout marquer comme lu
 DoliNotifNoNotifications=Aucune notification
 DoliNotifLoading=Chargement...
 DoliNotifViewAll=Voir tout
-DoliNotifJustNow=à l'instant
-DoliNotifMinutesAgo=min
-DoliNotifHoursAgo=h
-DoliNotifDaysAgo=j
 
 DoliNotifSetupTitle=DoliNotif — configuration
 DoliNotifPollingInterval=Intervalle de sondage (secondes)
