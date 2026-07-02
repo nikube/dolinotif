@@ -159,9 +159,6 @@ class ActionsDolinotif extends CommonHookActions
 		$html .= '  </div>';
 		$html .= '</div>';
 
-		// Toast container
-		$html .= '<div class="dolinotif-toast-container" id="dolinotif-toast-container"></div>';
-
 		$html .= '</div>';
 
 		$this->resprints = $html;

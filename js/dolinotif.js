@@ -7,7 +7,7 @@
  */
 
 /* DoliNotif — vanilla JS, ES5-compatible.
- * Handles: polling, bell dropdown, mark-read, mark-all-read, toasts on new items.
+ * Handles: polling, bell dropdown, mark-read, auto-open drawer on new items.
  * No jQuery dependency.
  */
 (function () {
@@ -37,7 +37,6 @@
 		var dropdown    = document.getElementById('dolinotif-dropdown');
 		var listEl      = document.getElementById('dolinotif-list');
 		var markAllBtn  = document.getElementById('dolinotif-markall');
-		var toastCt     = document.getElementById('dolinotif-toast-container');
 
 		// Translated labels injected by the hook (data-labels JSON);
 		// English fallbacks if absent.
@@ -143,66 +142,33 @@
 			try { sessionStorage.setItem('dolinotif_lastCheck', v); } catch (e) {}
 		}
 
-		/* ------------ toast ------------ */
+		/* ------------ auto-open drawer on new notifications ------------
+		 * No separate toast: the drawer IS the notification surface. When a
+		 * new item arrives, it slides open, then closes itself after a few
+		 * seconds if untouched — and the badge KEEPS counting (auto-open is
+		 * not "read"; only engaging with the drawer is). */
 
-		var MAX_TOASTS = 4;
+		var autoCloseTimer = null;
+		var AUTO_CLOSE_MS = 8000;
 
-		function showToast(item) {
-			if (!toastCt) return;
-			var type = item.type || 'info';
-			var t = document.createElement('div');
-			t.className = 'dolinotif-toast ' + type;
-			var h = '<button type="button" class="dolinotif-toast-close" aria-label="&times;">&times;</button>';
-			h += '<span class="dolinotif-toast-icon ' + escapeHtml(type) + '">' + typeIcon(type) + '</span>';
-			h += '<div class="dolinotif-toast-content">';
-			h += '<div class="dolinotif-toast-title">' + escapeHtml(item.title || '') + '</div>';
-			if (item.message) {
-				h += '<div class="dolinotif-toast-msg">' + escapeHtml(item.message) + '</div>';
-			}
-			h += '</div>';
-			t.innerHTML = h;
-			t.querySelector('.dolinotif-toast-close').addEventListener('click', function (e) {
-				// Dismiss the toast only — the item stays unread on the bell.
-				e.stopPropagation();
-				if (t.parentNode) t.parentNode.removeChild(t);
-			});
-			t.addEventListener('click', function () {
-				if (item.url) {
-					markRead(item.rowid, function () { window.location.href = item.url; });
-				} else {
-					markRead(item.rowid);
-					if (t.parentNode) t.parentNode.removeChild(t);
-				}
-			});
-			toastCt.appendChild(t);
-			// Persistent by design: toasts stack and stay until dismissed.
-			// Beyond MAX_TOASTS, the oldest collapse into a "+N" pill that
-			// opens the bell — the dropdown is the real inbox.
-			enforceToastCap();
+		function armAutoClose() {
+			if (autoCloseTimer) clearTimeout(autoCloseTimer);
+			autoCloseTimer = setTimeout(function () {
+				autoCloseTimer = null;
+				closeDropdown();
+			}, AUTO_CLOSE_MS);
 		}
 
-		function enforceToastCap() {
-			var toasts = toastCt.querySelectorAll('.dolinotif-toast');
-			var excess = toasts.length - MAX_TOASTS;
-			if (excess <= 0) return;
-			var pill = document.getElementById('dolinotif-toast-more');
-			if (!pill) {
-				pill = document.createElement('div');
-				pill.id = 'dolinotif-toast-more';
-				pill.className = 'dolinotif-toast-more';
-				pill.setAttribute('data-count', '0');
-				pill.addEventListener('click', function () {
-					while (toastCt.firstChild) toastCt.removeChild(toastCt.firstChild);
-					openDropdown();
-				});
-				toastCt.insertBefore(pill, toastCt.firstChild);
+		function autoOpenDropdown() {
+			if (!dropdown) return;
+			if (isOpen()) {
+				loadList();
+				if (autoCloseTimer) armAutoClose();
+				return;
 			}
-			for (var i = 0; i < excess; i++) {
-				if (toasts[i] && toasts[i].parentNode) toasts[i].parentNode.removeChild(toasts[i]);
-			}
-			var c = parseInt(pill.getAttribute('data-count') || '0', 10) + excess;
-			pill.setAttribute('data-count', String(c));
-			pill.textContent = '+' + c + ' ' + LABELS.moreNotifications;
+			dropdown.style.display = 'block';
+			loadList();
+			armAutoClose();
 		}
 
 		/* ------------ dropdown rendering ------------ */
@@ -245,6 +211,7 @@
 
 		function openDropdown() {
 			if (!dropdown) return;
+			if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
 			dropdown.style.display = 'block';
 			loadList();
 			// Opening the panel = notifications seen. The list just rendered
@@ -253,6 +220,7 @@
 			markAllRead(false);
 		}
 		function closeDropdown() {
+			if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
 			if (dropdown) dropdown.style.display = 'none';
 		}
 		function isOpen() {
@@ -297,9 +265,7 @@
 				setBadge(data.unread | 0);
 				if (data.now) setLastCheck(data.now);
 				if (data['new'] && data['new'].length) {
-					for (var i = 0; i < data['new'].length; i++) {
-						showToast(data['new'][i]);
-					}
+					autoOpenDropdown();
 				}
 			});
 		}
@@ -319,6 +285,18 @@
 			if (wrap.contains(e.target)) return;
 			closeDropdown();
 		});
+
+		// Engaging with an auto-opened drawer cancels the auto-close and
+		// counts as "seen" (badge drops), like a manual open would.
+		if (dropdown) {
+			dropdown.addEventListener('mouseenter', function () {
+				if (autoCloseTimer) {
+					clearTimeout(autoCloseTimer);
+					autoCloseTimer = null;
+					markAllRead(false);
+				}
+			});
+		}
 
 		// Legacy "mark all read" button (removed from the hook markup —
 		// opening the panel marks everything read). Kept wired defensively
