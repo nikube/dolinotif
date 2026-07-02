@@ -14,6 +14,7 @@ CREATE TABLE llx_dolinotif (
 	type            VARCHAR(20) NOT NULL DEFAULT 'info',
 	category        VARCHAR(50) DEFAULT NULL,
 	title           VARCHAR(255) NOT NULL,
+	title_i18n      TEXT,
 	message         TEXT,
 	url             VARCHAR(500),
 	element_type    VARCHAR(50),

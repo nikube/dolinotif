@@ -93,6 +93,33 @@ function dolinotif_json_out($payload, $httpStatus = 200)
 	exit;
 }
 
+/**
+ * Resolve a notification title in the VIEWER's language when a display-time
+ * i18n payload is present (title_i18n JSON {key, file, params[]}); fall back
+ * to the pre-rendered title (sender's language) otherwise.
+ *
+ * @param  Translate $langs  Viewer's translator
+ * @param  object    $r      Notification row
+ * @return string
+ */
+function dolinotif_resolve_title($langs, $r)
+{
+	if (!empty($r->title_i18n)) {
+		$d = json_decode($r->title_i18n, true);
+		if (is_array($d) && !empty($d['key'])) {
+			if (!empty($d['file'])) {
+				$langs->load($d['file']);
+			}
+			$p = (isset($d['params']) && is_array($d['params'])) ? array_values($d['params']) : array();
+			$t = $langs->transnoentities($d['key'], ...$p);
+			if ($t !== $d['key']) {
+				return $t;
+			}
+		}
+	}
+	return (string) $r->title;
+}
+
 // Auth
 if (empty($user) || !is_object($user) || $user->id <= 0) {
 	dolinotif_json_out(array('error' => 'not_authenticated'), 401);
@@ -128,7 +155,7 @@ switch ($action) {
 							'rowid'         => (int) $r->rowid,
 							'type'          => $r->type,
 							'category'      => $r->category,
-							'title'         => $r->title,
+							'title'         => dolinotif_resolve_title($langs, $r),
 							'message'       => $r->message,
 							'url'           => $r->url,
 							'element_type'  => $r->element_type,
@@ -170,7 +197,7 @@ switch ($action) {
 				'rowid'         => (int) $r->rowid,
 				'type'          => $r->type,
 				'category'      => $r->category,
-				'title'         => $r->title,
+				'title'         => dolinotif_resolve_title($langs, $r),
 				'message'       => $r->message,
 				'url'           => $r->url,
 				'element_type'  => $r->element_type,

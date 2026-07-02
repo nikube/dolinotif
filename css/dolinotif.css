@@ -20,19 +20,22 @@
 	position: relative;
 	display: inline-block;
 }
+/* Small round counter, bottom-right of the bell glyph */
 .dolinotif-badge {
 	position: absolute;
-	top: -7px;
+	bottom: -6px;
 	right: -8px;
-	min-width: 16px;
-	padding: 0 4px;
+	min-width: 14px;
+	height: 14px;
+	padding: 0 3px;
 	border-radius: 999px;
 	background: #e63757;
 	color: #fff;
-	font-size: 10px;
+	font-size: 9px;
 	font-weight: 700;
-	line-height: 15px;
+	line-height: 14px;
 	text-align: center;
+	box-sizing: border-box;
 	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 

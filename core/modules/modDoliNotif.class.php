@@ -184,6 +184,12 @@ class modDoliNotif extends DolibarrModules
 
 		$sql = array();
 
+		// v1.1 migration: display-time i18n payload (idempotent)
+		$sql[] = array(
+			'sql' => "ALTER TABLE ".MAIN_DB_PREFIX."dolinotif ADD COLUMN title_i18n TEXT AFTER title",
+			'ignoreerror' => 1,
+		);
+
 		return $this->_init($sql, $options);
 	}
 

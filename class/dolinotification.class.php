@@ -57,6 +57,8 @@ class DoliNotification
 	public $type;
 	public $category;
 	public $title;
+	/** @var ?string JSON {key, file, params[]} — translated at DISPLAY time in the viewer's language; title is the pre-rendered fallback */
+	public $title_i18n;
 	public $message;
 	public $url;
 	public $element_type;
@@ -101,13 +103,14 @@ class DoliNotification
 		$now = $this->db->idate(dol_now());
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."dolinotif (";
-		$sql .= "entity, fk_user, type, category, title, message, url, element_type, fk_element, is_read, date_creation";
+		$sql .= "entity, fk_user, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
 		$sql .= ") VALUES (";
 		$sql .= (int) $entity;
 		$sql .= ", ".(int) $this->fk_user;
 		$sql .= ", '".$this->db->escape($type)."'";
 		$sql .= ", ".($this->category !== null && $this->category !== '' ? "'".$this->db->escape($this->category)."'" : "NULL");
 		$sql .= ", '".$this->db->escape($this->title)."'";
+		$sql .= ", ".($this->title_i18n !== null && $this->title_i18n !== '' ? "'".$this->db->escape($this->title_i18n)."'" : "NULL");
 		$sql .= ", ".($this->message !== null && $this->message !== '' ? "'".$this->db->escape($this->message)."'" : "NULL");
 		$sql .= ", ".($this->url !== null && $this->url !== '' ? "'".$this->db->escape($this->url)."'" : "NULL");
 		$sql .= ", ".($this->element_type !== null && $this->element_type !== '' ? "'".$this->db->escape($this->element_type)."'" : "NULL");
@@ -215,7 +218,7 @@ class DoliNotification
 			$limit = 200;
 		}
 
-		$sql = "SELECT rowid, type, category, title, message, url, element_type, fk_element, is_read, date_creation";
+		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE fk_user = ".(int) $fk_user;
 		$sql .= " AND entity = ".(int) $entity;
@@ -249,7 +252,7 @@ class DoliNotification
 		if ($limit <= 0 || $limit > 100) {
 			$limit = 20;
 		}
-		$sql = "SELECT rowid, type, category, title, message, url, element_type, fk_element, is_read, date_creation";
+		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE fk_user = ".(int) $fk_user;
 		$sql .= " AND entity = ".(int) $entity;

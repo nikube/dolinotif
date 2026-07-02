@@ -69,6 +69,11 @@ function dolinotifSend($db, $fk_user, $params)
 	$notif->type        = !empty($params['type']) ? (string) $params['type'] : 'info';
 	$notif->category    = isset($params['category']) ? (string) $params['category'] : null;
 	$notif->title       = (string) $params['title'];
+	// Optional display-time i18n: array('key' => 'LangKey', 'file' => 'file@module', 'params' => array(...)).
+	// The reader's ajax translates it in THEIR language; 'title' stays the pre-rendered fallback.
+	if (!empty($params['title_i18n']) && is_array($params['title_i18n']) && !empty($params['title_i18n']['key'])) {
+		$notif->title_i18n = json_encode($params['title_i18n']);
+	}
 	$notif->message     = isset($params['message']) ? (string) $params['message'] : null;
 	$notif->url         = isset($params['url']) ? (string) $params['url'] : null;
 	$notif->element_type = isset($params['element_type']) ? (string) $params['element_type'] : null;
