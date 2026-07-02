@@ -118,12 +118,24 @@ class ActionsDolinotif extends CommonHookActions
 		$ajaxUrl = DOL_URL_ROOT.'/custom/dolinotif/ajax/notifications.php';
 		$token = newToken();
 
+		// Translated JS labels (transnoentities: real UTF-8, the JS escapes).
+		$jsLabels = json_encode(array(
+			'noNotifications'   => $langs->transnoentities('DoliNotifNoNotifications'),
+			'loadError'         => $langs->transnoentities('DoliNotifLoadError'),
+			'now'               => $langs->transnoentities('DoliNotifJustNow'),
+			'minutesAgo'        => $langs->transnoentities('DoliNotifMinutesAgo'),
+			'hoursAgo'          => $langs->transnoentities('DoliNotifHoursAgo'),
+			'daysAgo'           => $langs->transnoentities('DoliNotifDaysAgo'),
+			'moreNotifications' => $langs->transnoentities('DoliNotifMore'),
+		));
+
 		$html = '';
 		$html .= '<div class="login_block_elem dolinotif-wrap" id="dolinotif-wrap"'
 			.' data-ajax="'.dol_escape_htmltag($ajaxUrl).'"'
 			.' data-token="'.dol_escape_htmltag($token).'"'
 			.' data-polling="'.(int) getDolGlobalInt('DOLINOTIF_POLLING_INTERVAL', 30).'"'
-			.' data-max="'.(int) getDolGlobalInt('DOLINOTIF_MAX_DROPDOWN', 15).'">';
+			.' data-max="'.(int) getDolGlobalInt('DOLINOTIF_MAX_DROPDOWN', 15).'"'
+			.' data-labels="'.dol_escape_htmltag($jsLabels).'">';
 
 		// Bell button — use Dolibarr-standard classes (atoplogin valignmiddle)
 		// so it aligns with the other top-right icons (bookmarks, help, logout).

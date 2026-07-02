@@ -8,6 +8,7 @@
 	position: relative;
 	display: inline-block;
 	vertical-align: middle;
+	-webkit-font-smoothing: antialiased;
 }
 .dolinotif-bell {
 	position: relative;
@@ -15,17 +16,18 @@
 }
 .dolinotif-badge {
 	position: absolute;
-	top: -4px;
-	right: -4px;
-	min-width: 14px;
+	top: -5px;
+	right: -7px;
+	min-width: 16px;
 	padding: 0 4px;
-	border-radius: 8px;
-	background: #c0392b;
+	border-radius: 999px;
+	background: #e63757;
 	color: #fff;
 	font-size: 10px;
-	font-weight: 600;
-	line-height: 13px;
+	font-weight: 700;
+	line-height: 15px;
 	text-align: center;
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 /* ---------- Dropdown ---------- */
@@ -33,145 +35,262 @@
 	position: absolute;
 	top: 100%;
 	right: 0;
-	width: 360px;
+	width: 380px;
 	max-width: 92vw;
 	background: #fff;
-	color: #333;
-	border: 1px solid #ccc;
-	box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+	color: #1e293b;
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(15, 23, 42, 0.08);
+	overflow: hidden;
 	z-index: 10000;
-	margin-top: 4px;
+	margin-top: 8px;
 	text-align: left;
+	animation: dolinotif-pop 0.16s ease-out;
+}
+@keyframes dolinotif-pop {
+	from { opacity: 0; transform: translateY(-6px); }
+	to   { opacity: 1; transform: translateY(0); }
 }
 
 .dolinotif-dropdown-header {
-	padding: 6px 10px;
-	border-bottom: 1px solid #e0e0e0;
-	background: #f5f5f5;
-	font-size: 12px;
-	text-align: left;
-	display: block;
-	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+	background: #fff;
 }
 .dolinotif-dropdown-header .dolinotif-title {
-	font-weight: 600;
+	font-weight: 700;
+	font-size: 13px;
+	color: #0f172a;
 }
 .dolinotif-markall {
-	float: right;
 	font-size: 11px;
-	color: #2a7ab8;
+	color: #2563eb;
+	text-decoration: none;
+	padding: 3px 8px;
+	border-radius: 999px;
+	transition: background 0.12s ease;
+}
+.dolinotif-markall:hover {
+	background: rgba(37, 99, 235, 0.08);
 	text-decoration: none;
 }
-.dolinotif-markall:hover { text-decoration: underline; }
 
 .dolinotif-list {
-	max-height: 420px;
+	max-height: 440px;
 	overflow-y: auto;
+	overscroll-behavior: contain;
 	text-align: left;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+.dolinotif-list::-webkit-scrollbar { width: 6px; }
+.dolinotif-list::-webkit-scrollbar-thumb {
+	background: rgba(15, 23, 42, 0.18);
+	border-radius: 999px;
 }
 .dolinotif-empty {
-	padding: 16px 10px;
+	padding: 32px 14px;
 	text-align: center;
-	color: #999;
+	color: #94a3b8;
 	font-size: 12px;
+}
+.dolinotif-empty::before {
+	content: "🔔";
+	display: block;
+	font-size: 22px;
+	opacity: 0.45;
+	margin-bottom: 8px;
 }
 
 .dolinotif-item {
-	display: block;
-	padding: 6px 10px;
-	border-bottom: 1px solid #eee;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 14px;
+	border-bottom: 1px solid rgba(15, 23, 42, 0.05);
 	cursor: pointer;
-	font-size: 12px;
+	font-size: 12.5px;
 	text-align: left;
-	color: #333;
+	color: #334155;
+	transition: background 0.12s ease;
+	position: relative;
 }
 .dolinotif-item:last-child { border-bottom: none; }
-.dolinotif-item:hover      { background: #f5f5f5; }
-.dolinotif-item.unread     { background: #fafcff; }
-.dolinotif-item.unread .dolinotif-item-title { font-weight: 600; }
+.dolinotif-item:hover      { background: #f8fafc; }
+.dolinotif-item.unread     { background: rgba(37, 99, 235, 0.045); }
+.dolinotif-item.unread:hover { background: rgba(37, 99, 235, 0.08); }
+.dolinotif-item.unread .dolinotif-item-title { font-weight: 650; color: #0f172a; }
+
+/* Type icon — small tinted circle */
+.dolinotif-item-icon {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	margin-top: 1px;
+	background: rgba(58, 135, 173, 0.12);
+	color: #3a87ad;
+}
+.dolinotif-item-icon.success { background: rgba(34, 154, 96, 0.12);  color: #1d9a60; }
+.dolinotif-item-icon.warning { background: rgba(224, 142, 11, 0.14); color: #d07c00; }
+.dolinotif-item-icon.error   { background: rgba(230, 55, 87, 0.12);  color: #dc2f4e; }
+
+.dolinotif-body { min-width: 0; flex: 1 1 auto; }
 
 .dolinotif-item-title {
 	margin: 0 0 2px 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	line-height: 1.35;
 }
 .dolinotif-item-msg {
-	color: #666;
+	color: #64748b;
 	margin: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	line-height: 1.35;
 }
 .dolinotif-item-meta {
-	margin-top: 2px;
+	margin-top: 3px;
 	font-size: 11px;
-	color: #999;
+	color: #94a3b8;
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 .dolinotif-tag {
 	display: inline-block;
-	padding: 0 4px;
-	margin-right: 4px;
-	background: #e8e8e8;
-	color: #555;
+	padding: 1px 7px;
+	background: rgba(15, 23, 42, 0.05);
+	color: #64748b;
 	font-size: 10px;
-	border-radius: 2px;
+	border-radius: 999px;
 	text-transform: lowercase;
 }
 
-/* Hide the dropdown's link column entirely — the whole row is clickable */
+/* Blue dot on unread rows */
+.dolinotif-unread-dot {
+	flex: 0 0 auto;
+	width: 7px;
+	height: 7px;
+	border-radius: 999px;
+	background: #2563eb;
+	margin-top: 7px;
+}
+
+/* Legacy elements kept hidden — the whole row is clickable */
 .dolinotif-link { display: none; }
 .dolinotif-dot  { display: none; }
 
 /* ---------- Toasts ---------- */
 .dolinotif-toast-container {
 	position: fixed;
-	right: 12px;
-	bottom: 12px;
+	right: 16px;
+	bottom: 16px;
 	z-index: 11000;
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 8px;
 	pointer-events: none;
 }
 .dolinotif-toast {
 	pointer-events: auto;
 	position: relative;
-	min-width: 240px;
-	max-width: 360px;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	width: 330px;
+	max-width: 90vw;
 	background: #fff;
-	color: #333;
-	border: 1px solid #ccc;
-	border-left: 3px solid #3a87ad;
-	padding: 8px 26px 8px 10px;
-	font-size: 12px;
+	color: #1e293b;
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	border-radius: 12px;
+	padding: 11px 30px 11px 12px;
+	font-size: 12.5px;
 	text-align: left;
-	box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+	box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08);
 	cursor: pointer;
+	animation: dolinotif-slide-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
+.dolinotif-toast:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 14px 32px rgba(15, 23, 42, 0.2), 0 3px 8px rgba(15, 23, 42, 0.1);
+}
+@keyframes dolinotif-slide-in {
+	from { opacity: 0; transform: translateX(24px); }
+	to   { opacity: 1; transform: translateX(0); }
+}
+
+.dolinotif-toast-icon {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	background: rgba(58, 135, 173, 0.12);
+	color: #3a87ad;
+}
+.dolinotif-toast-icon.success { background: rgba(34, 154, 96, 0.12);  color: #1d9a60; }
+.dolinotif-toast-icon.warning { background: rgba(224, 142, 11, 0.14); color: #d07c00; }
+.dolinotif-toast-icon.error   { background: rgba(230, 55, 87, 0.12);  color: #dc2f4e; }
+
+.dolinotif-toast-content { min-width: 0; flex: 1 1 auto; }
+
 .dolinotif-toast-close {
 	position: absolute;
-	top: 4px;
-	right: 6px;
+	top: 7px;
+	right: 8px;
 	border: 0;
 	background: none;
-	color: #999;
-	font-size: 14px;
+	color: #94a3b8;
+	font-size: 15px;
 	line-height: 1;
 	padding: 2px;
 	cursor: pointer;
+	border-radius: 4px;
+	transition: color 0.12s ease;
 }
-.dolinotif-toast-close:hover {
-	color: #333;
-}
-.dolinotif-toast.info    { border-left-color: #3a87ad; }
-.dolinotif-toast.success { border-left-color: #3b9f5a; }
-.dolinotif-toast.warning { border-left-color: #e08e0b; }
-.dolinotif-toast.error   { border-left-color: #c9302c; }
+.dolinotif-toast-close:hover { color: #334155; }
+
 .dolinotif-toast .dolinotif-toast-title {
-	font-weight: 600;
+	font-weight: 650;
 	margin-bottom: 2px;
+	line-height: 1.35;
+	color: #0f172a;
 }
 .dolinotif-toast .dolinotif-toast-msg {
-	color: #666;
+	color: #64748b;
+	line-height: 1.35;
 }
+
+/* Collapsed-overflow pill: "+N more notifications" — opens the bell */
+.dolinotif-toast-more {
+	pointer-events: auto;
+	align-self: flex-end;
+	background: #0f172a;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	padding: 6px 12px;
+	border-radius: 999px;
+	cursor: pointer;
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+	animation: dolinotif-slide-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.dolinotif-toast-more:hover { background: #1e293b; }

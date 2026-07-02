@@ -128,13 +128,17 @@ switch ($action) {
 							'rowid'         => (int) $r->rowid,
 							'type'          => $r->type,
 							'category'      => $r->category,
-							'title'         => dol_escape_htmltag($r->title),
-							'message'       => $r->message !== null ? dol_escape_htmltag($r->message) : null,
+							'title'         => $r->title,
+							'message'       => $r->message,
 							'url'           => $r->url,
 							'element_type'  => $r->element_type,
 							'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
 							'is_read'       => (int) $r->is_read,
 							'date_creation' => $r->date_creation,
+							// Server-computed age: browser-TZ-proof (raw DB
+							// datetimes are server TZ; parsing them client-side
+							// shifted every timestamp by the TZ offset).
+							'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
 						);
 					}
 				}
@@ -166,13 +170,14 @@ switch ($action) {
 				'rowid'         => (int) $r->rowid,
 				'type'          => $r->type,
 				'category'      => $r->category,
-				'title'         => dol_escape_htmltag($r->title),
-				'message'       => $r->message !== null ? dol_escape_htmltag($r->message) : null,
+				'title'         => $r->title,
+				'message'       => $r->message,
 				'url'           => $r->url,
 				'element_type'  => $r->element_type,
 				'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
 				'is_read'       => (int) $r->is_read,
 				'date_creation' => $r->date_creation,
+				'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
 			);
 		}
 		dolinotif_json_out($out);

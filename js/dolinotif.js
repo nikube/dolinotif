@@ -39,14 +39,23 @@
 		var markAllBtn  = document.getElementById('dolinotif-markall');
 		var toastCt     = document.getElementById('dolinotif-toast-container');
 
+		// Translated labels injected by the hook (data-labels JSON);
+		// English fallbacks if absent.
 		var LABELS = {
-			noNotifications: 'No notifications',
-			loadError:       'Unable to load notifications',
-			now:             'just now',
-			minutesAgo:      ' min ago',
-			hoursAgo:        ' h ago',
-			daysAgo:         ' d ago'
+			noNotifications:   'No notifications',
+			loadError:         'Unable to load notifications',
+			now:               'just now',
+			minutesAgo:        '%s min ago',
+			hoursAgo:          '%s h ago',
+			daysAgo:           '%s d ago',
+			moreNotifications: 'more notifications'
 		};
+		try {
+			var lbl = JSON.parse(wrap.getAttribute('data-labels') || '{}');
+			for (var lk in lbl) {
+				if (Object.prototype.hasOwnProperty.call(lbl, lk) && lbl[lk]) LABELS[lk] = lbl[lk];
+			}
+		} catch (e) {}
 
 		/* ------------ small helpers ------------ */
 
@@ -95,22 +104,22 @@
 				.replace(/'/g, '&#39;');
 		}
 
-		function parseSqlDate(s) {
-			if (!s) return null;
-			// 'YYYY-MM-DD HH:MM:SS' → Date (interpret as local time)
-			var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s);
-			if (!m) return null;
-			return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+		function relTime(ageSeconds) {
+			// Age is computed SERVER-side (ajax 'age' field): parsing the raw
+			// DB datetime in the browser shifted every timestamp by the
+			// server/browser timezone offset.
+			var diff = ageSeconds | 0;
+			if (diff < 60) return LABELS.now;
+			if (diff < 3600) return LABELS.minutesAgo.replace('%s', String(Math.floor(diff / 60)));
+			if (diff < 86400) return LABELS.hoursAgo.replace('%s', String(Math.floor(diff / 3600)));
+			return LABELS.daysAgo.replace('%s', String(Math.floor(diff / 86400)));
 		}
 
-		function relTime(sqlDate) {
-			var d = parseSqlDate(sqlDate);
-			if (!d) return '';
-			var diff = Math.floor((Date.now() - d.getTime()) / 1000);
-			if (diff < 60) return LABELS.now;
-			if (diff < 3600) return Math.floor(diff / 60) + LABELS.minutesAgo;
-			if (diff < 86400) return Math.floor(diff / 3600) + LABELS.hoursAgo;
-			return Math.floor(diff / 86400) + LABELS.daysAgo;
+		function typeIcon(type) {
+			if (type === 'success') return '✓';
+			if (type === 'error') return '✕';
+			if (type === 'warning') return '!';
+			return 'i';
 		}
 
 		/* ------------ badge ------------ */
@@ -136,15 +145,21 @@
 
 		/* ------------ toast ------------ */
 
+		var MAX_TOASTS = 4;
+
 		function showToast(item) {
 			if (!toastCt) return;
+			var type = item.type || 'info';
 			var t = document.createElement('div');
-			t.className = 'dolinotif-toast ' + (item.type || 'info');
+			t.className = 'dolinotif-toast ' + type;
 			var h = '<button type="button" class="dolinotif-toast-close" aria-label="&times;">&times;</button>';
+			h += '<span class="dolinotif-toast-icon ' + escapeHtml(type) + '">' + typeIcon(type) + '</span>';
+			h += '<div class="dolinotif-toast-content">';
 			h += '<div class="dolinotif-toast-title">' + escapeHtml(item.title || '') + '</div>';
 			if (item.message) {
 				h += '<div class="dolinotif-toast-msg">' + escapeHtml(item.message) + '</div>';
 			}
+			h += '</div>';
 			t.innerHTML = h;
 			t.querySelector('.dolinotif-toast-close').addEventListener('click', function (e) {
 				// Dismiss the toast only — the item stays unread on the bell.
@@ -160,8 +175,34 @@
 				}
 			});
 			toastCt.appendChild(t);
-			// Persistent by design: toasts stack in the container and stay on
-			// screen until dismissed (close button, click-through, or mark-read).
+			// Persistent by design: toasts stack and stay until dismissed.
+			// Beyond MAX_TOASTS, the oldest collapse into a "+N" pill that
+			// opens the bell — the dropdown is the real inbox.
+			enforceToastCap();
+		}
+
+		function enforceToastCap() {
+			var toasts = toastCt.querySelectorAll('.dolinotif-toast');
+			var excess = toasts.length - MAX_TOASTS;
+			if (excess <= 0) return;
+			var pill = document.getElementById('dolinotif-toast-more');
+			if (!pill) {
+				pill = document.createElement('div');
+				pill.id = 'dolinotif-toast-more';
+				pill.className = 'dolinotif-toast-more';
+				pill.setAttribute('data-count', '0');
+				pill.addEventListener('click', function () {
+					while (toastCt.firstChild) toastCt.removeChild(toastCt.firstChild);
+					openDropdown();
+				});
+				toastCt.insertBefore(pill, toastCt.firstChild);
+			}
+			for (var i = 0; i < excess; i++) {
+				if (toasts[i] && toasts[i].parentNode) toasts[i].parentNode.removeChild(toasts[i]);
+			}
+			var c = parseInt(pill.getAttribute('data-count') || '0', 10) + excess;
+			pill.setAttribute('data-count', String(c));
+			pill.textContent = '+' + c + ' ' + LABELS.moreNotifications;
 		}
 
 		/* ------------ dropdown rendering ------------ */
@@ -178,19 +219,22 @@
 				var unreadCls = it.is_read ? '' : ' unread';
 				var type = it.type || 'info';
 				html += '<div class="dolinotif-item' + unreadCls + '" data-id="' + (it.rowid | 0) + '" data-url="' + escapeHtml(it.url || '') + '">';
-				html += '  <span class="dolinotif-dot ' + escapeHtml(type) + '"></span>';
+				html += '  <span class="dolinotif-item-icon ' + escapeHtml(type) + '">' + typeIcon(type) + '</span>';
 				html += '  <div class="dolinotif-body">';
 				html += '    <div class="dolinotif-item-title">' + escapeHtml(it.title || '') + '</div>';
 				if (it.message) {
 					html += '    <div class="dolinotif-item-msg">' + escapeHtml(it.message) + '</div>';
 				}
 				html += '    <div class="dolinotif-item-meta">';
-				html += '      <span>' + escapeHtml(relTime(it.date_creation)) + '</span>';
+				html += '      <span>' + escapeHtml(relTime(it.age)) + '</span>';
 				if (it.category) {
 					html += '      <span class="dolinotif-tag">' + escapeHtml(it.category) + '</span>';
 				}
 				html += '    </div>';
 				html += '  </div>';
+				if (!it.is_read) {
+					html += '  <span class="dolinotif-unread-dot" aria-hidden="true"></span>';
+				}
 				if (it.url) {
 					html += '  <a href="' + escapeHtml(it.url) + '" class="dolinotif-link" data-id="' + (it.rowid | 0) + '" title="Open">&rarr;</a>';
 				}
