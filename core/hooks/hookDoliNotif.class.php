@@ -139,16 +139,20 @@ class ActionsDolinotif extends CommonHookActions
 
 		// Bell button — use Dolibarr-standard classes (atoplogin valignmiddle)
 		// so it aligns with the other top-right icons (bookmarks, help, logout).
+		// The badge is anchored to an inner wrapper around the icon glyph so
+		// it overlaps the bell itself, not the (padded) anchor box.
 		$html .= '<a href="#" class="login dolinotif-bell" id="dolinotif-bell" title="'.dol_escape_htmltag($langs->trans('DoliNotifNotifications')).'">';
+		$html .= '<span class="dolinotif-bell-icon">';
 		$html .= '<span class="fa fa-bell atoplogin valignmiddle" aria-hidden="true"></span>';
 		$html .= '<span class="dolinotif-badge" id="dolinotif-badge"'.$badgeDisplay.'>'.dol_escape_htmltag($badgeLabel).'</span>';
+		$html .= '</span>';
 		$html .= '</a>';
 
-		// Dropdown (populated by JS)
+		// Dropdown (populated by JS). No "mark all read" button: opening the
+		// panel marks everything as read (JS).
 		$html .= '<div class="dolinotif-dropdown" id="dolinotif-dropdown" style="display:none;">';
 		$html .= '  <div class="dolinotif-dropdown-header">';
 		$html .= '    <span class="dolinotif-title">'.dol_escape_htmltag($langs->trans('DoliNotifNotifications')).'</span>';
-		$html .= '    <a href="#" class="dolinotif-markall" id="dolinotif-markall">'.dol_escape_htmltag($langs->trans('DoliNotifMarkAllAsRead')).'</a>';
 		$html .= '  </div>';
 		$html .= '  <div class="dolinotif-list" id="dolinotif-list">';
 		$html .= '    <div class="dolinotif-empty">'.dol_escape_htmltag($langs->trans('DoliNotifLoading')).'</div>';

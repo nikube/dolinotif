@@ -247,6 +247,10 @@
 			if (!dropdown) return;
 			dropdown.style.display = 'block';
 			loadList();
+			// Opening the panel = notifications seen. The list just rendered
+			// keeps its unread styling until the next open; only the badge
+			// drops to zero (no list reload here on purpose).
+			markAllRead(false);
 		}
 		function closeDropdown() {
 			if (dropdown) dropdown.style.display = 'none';
@@ -276,11 +280,11 @@
 			});
 		}
 
-		function markAllRead() {
+		function markAllRead(reloadList) {
 			xhrPost(AJAX_URL + '?action=markallread', { token: TOKEN }, function (err) {
 				if (err) return;
 				setBadge(0);
-				if (isOpen()) loadList();
+				if (reloadList && isOpen()) loadList();
 			});
 		}
 
@@ -316,11 +320,14 @@
 			closeDropdown();
 		});
 
+		// Legacy "mark all read" button (removed from the hook markup —
+		// opening the panel marks everything read). Kept wired defensively
+		// in case an older cached header still renders it.
 		if (markAllBtn) {
 			markAllBtn.addEventListener('click', function (e) {
 				e.preventDefault();
 				e.stopPropagation();
-				markAllRead();
+				markAllRead(true);
 			});
 		}
 

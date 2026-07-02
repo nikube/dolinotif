@@ -14,10 +14,16 @@
 	position: relative;
 	display: inline-block;
 }
+/* Inner wrapper hugging the bell glyph — the badge anchors to IT, so it
+ * overlaps the bell itself rather than the padded anchor box. */
+.dolinotif-bell-icon {
+	position: relative;
+	display: inline-block;
+}
 .dolinotif-badge {
 	position: absolute;
-	top: -5px;
-	right: -7px;
+	top: -7px;
+	right: -8px;
 	min-width: 16px;
 	padding: 0 4px;
 	border-radius: 999px;
