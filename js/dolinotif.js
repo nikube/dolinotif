@@ -139,13 +139,17 @@
 			}
 		}
 
-		/* ------------ session check time ------------ */
+		/* ------------ poll cursor ------------
+		 * Row-id cursor, not a timestamp: the server pages new items oldest-
+		 * first with rowid > cursor, so a burst larger than one page is
+		 * delivered across successive polls instead of being skipped when the
+		 * cursor jumps to "now". */
 
-		function getLastCheck() {
-			try { return sessionStorage.getItem('dolinotif_lastCheck') || ''; } catch (e) { return ''; }
+		function getLastId() {
+			try { return parseInt(sessionStorage.getItem('dolinotif_lastId') || '0', 10) || 0; } catch (e) { return 0; }
 		}
-		function setLastCheck(v) {
-			try { sessionStorage.setItem('dolinotif_lastCheck', v); } catch (e) {}
+		function setLastId(v) {
+			try { sessionStorage.setItem('dolinotif_lastId', String(v | 0)); } catch (e) {}
 		}
 
 		/* ------------ auto-open drawer on new notifications ------------
@@ -273,13 +277,13 @@
 		}
 
 		function refreshCount() {
-			var since = getLastCheck();
+			var sinceId = getLastId();
 			var url = AJAX_URL + '?action=count';
-			if (since) url += '&since=' + encodeURIComponent(since);
+			if (sinceId > 0) url += '&since_id=' + sinceId;
 			xhrGet(url, function (err, data) {
 				if (err || !data) return;
 				setBadge(data.unread | 0);
-				if (data.now) setLastCheck(data.now);
+				if (typeof data.now_id !== 'undefined') setLastId(data.now_id);
 				if (data['new'] && data['new'].length) {
 					autoOpenDropdown();
 				}

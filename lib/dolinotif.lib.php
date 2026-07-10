@@ -27,6 +27,43 @@ dol_include_once('/dolinotif/class/dolinotification.class.php');
 
 
 /**
+ *	Sanitize a notification URL. The frontend puts this value in an href AND
+ *	assigns it to window.location.href, so a stored javascript: (or other
+ *	active-scheme) URL would execute when the notification is clicked.
+ *
+ *	Allowed: relative Dolibarr paths ('/custom/...', 'card.php?id=...') and
+ *	absolute http/https URLs. Rejected (returns null): every other scheme
+ *	(javascript:, data:, vbscript:...), scheme-relative '//host', and
+ *	whitespace/control-character smuggling.
+ *
+ *	@param	mixed	$url	Raw URL value
+ *	@return	string|null		Safe URL, or null when rejected/empty
+ */
+function dolinotifSanitizeUrl($url)
+{
+	if (!is_string($url) && !is_numeric($url)) {
+		return null;
+	}
+	// Control chars (incl. \t\r\n) can hide a scheme from naive checks —
+	// strip them before validating, like browsers collapse them.
+	$url = preg_replace('/[\x00-\x20\x7F]+/', '', (string) $url);
+	if ($url === '' || $url === null) {
+		return null;
+	}
+	// Scheme-relative //host escapes to another origin: reject.
+	if (strpos($url, '//') === 0) {
+		return null;
+	}
+	// Absolute URLs: http(s) only.
+	if (preg_match('~^[a-z][a-z0-9+.-]*:~i', $url)) {
+		return preg_match('~^https?://~i', $url) ? $url : null;
+	}
+	// No scheme: relative path — safe for both href and location.href.
+	return $url;
+}
+
+
+/**
  *	Send an in-app notification.
  *
  *	This is the ONLY public entry point for other modules to push notifications
@@ -39,7 +76,8 @@ dol_include_once('/dolinotif/class/dolinotification.class.php');
  *		- message      (string, optional)
  *		- type         (string: info|success|warning|error, default: info)
  *		- category     (string, optional, e.g. 'bgjob')
- *		- url          (string, optional, relative URL)
+ *		- url          (string, optional, relative Dolibarr path or http(s) URL;
+ *		                other schemes are dropped — see dolinotifSanitizeUrl())
  *		- element_type (string, optional)
  *		- fk_element   (int, optional)
  *		- entity       (int, optional, defaults to current entity)
@@ -75,7 +113,7 @@ function dolinotifSend($db, $fk_user, $params)
 		$notif->title_i18n = json_encode($params['title_i18n']);
 	}
 	$notif->message     = isset($params['message']) ? (string) $params['message'] : null;
-	$notif->url         = isset($params['url']) ? (string) $params['url'] : null;
+	$notif->url         = isset($params['url']) ? dolinotifSanitizeUrl($params['url']) : null;
 	$notif->element_type = isset($params['element_type']) ? (string) $params['element_type'] : null;
 	$notif->fk_element  = isset($params['fk_element']) ? (int) $params['fk_element'] : null;
 

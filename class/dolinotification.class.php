@@ -47,6 +47,12 @@ class DoliNotification
 	public $errors = array();
 
 	/**
+	 * @var string Cron-method output (read by Dolibarr's scheduler after
+	 *             purgeOld(); was a dynamic property — deprecated in PHP 8.2)
+	 */
+	public $output = '';
+
+	/**
 	 * @var string Table name (without MAIN_DB_PREFIX)
 	 */
 	public $table_element = 'dolinotif';
@@ -273,6 +279,66 @@ class DoliNotification
 	}
 
 	/**
+	 *	List notifications with rowid strictly greater than a cursor, oldest
+	 *	first. Row-id cursor pagination for the poll endpoint: unlike the
+	 *	timestamp variant capped at N rows, a burst larger than $limit is
+	 *	delivered across successive polls instead of being skipped forever.
+	 *
+	 *	@param	int	$fk_user	Target user
+	 *	@param	int	$entity		Entity
+	 *	@param	int	$sinceId	Return rows with rowid > this value
+	 *	@param	int	$limit		Max rows (1-100)
+	 *	@return	array|int		Rows oldest-first, or <0 on error
+	 */
+	public function listNewSinceId($fk_user, $entity, $sinceId, $limit = 20)
+	{
+		$limit = (int) $limit;
+		if ($limit <= 0 || $limit > 100) {
+			$limit = 20;
+		}
+		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
+		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
+		$sql .= " WHERE fk_user = ".(int) $fk_user;
+		$sql .= " AND entity = ".(int) $entity;
+		$sql .= " AND rowid > ".(int) $sinceId;
+		$sql .= " ORDER BY rowid ASC";
+		$sql .= " LIMIT ".$limit;
+
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+		$out = array();
+		while ($obj = $this->db->fetch_object($resql)) {
+			$out[] = $obj;
+		}
+		return $out;
+	}
+
+	/**
+	 *	Highest notification rowid for a user (0 if none). Used to initialise
+	 *	the poll cursor without replaying history as "new" events.
+	 *
+	 *	@param	int	$fk_user	Target user
+	 *	@param	int	$entity		Entity
+	 *	@return	int				Max rowid, 0 when empty, <0 on error
+	 */
+	public function latestId($fk_user, $entity)
+	{
+		$sql = "SELECT MAX(rowid) AS maxid FROM ".MAIN_DB_PREFIX."dolinotif";
+		$sql .= " WHERE fk_user = ".(int) $fk_user;
+		$sql .= " AND entity = ".(int) $entity;
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+		$obj = $this->db->fetch_object($resql);
+		return $obj && $obj->maxid !== null ? (int) $obj->maxid : 0;
+	}
+
+	/**
 	 *	Auto-purge read notifications older than DOLINOTIF_RETENTION_DAYS.
 	 *	Called by the daily cron job.
 	 *
@@ -285,9 +351,13 @@ class DoliNotification
 			$retention = 90;
 		}
 
+		// Entity-scoped: DOLINOTIF_RETENTION_DAYS can differ per entity in
+		// multicompany, so a cron tick must only purge the entities whose
+		// retention setting it just read.
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE date_creation < DATE_SUB(NOW(), INTERVAL ".$retention." DAY)";
 		$sql .= " AND is_read = 1";
+		$sql .= " AND entity IN (".getEntity('dolinotif').")";
 
 		if (!$this->db->query($sql)) {
 			$this->error = $this->db->lasterror();

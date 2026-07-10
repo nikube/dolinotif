@@ -66,6 +66,7 @@ if (!$res) {
 }
 
 dol_include_once('/dolinotif/class/dolinotification.class.php');
+dol_include_once('/dolinotif/lib/dolinotif.lib.php');
 
 /**
  * @var Conf $conf
@@ -136,13 +137,40 @@ $notif = new DoliNotification($db);
 switch ($action) {
 	case 'count':
 		$since = GETPOST('since', 'alphanohtml');
+		$sinceId = GETPOSTINT('since_id');
 		$unread = $notif->countUnread($fk_user, $entity);
 		if ($unread < 0) {
 			dolinotif_json_out(array('error' => 'db_error'), 500);
 		}
 
 		$newItems = array();
-		if (!empty($since)) {
+		$nowId = 0;
+		if ($sinceId > 0) {
+			// Row-id cursor (preferred): oldest-first with rowid > cursor, so
+			// a burst larger than the page size is delivered across
+			// successive polls instead of being skipped forever.
+			$rows = $notif->listNewSinceId($fk_user, $entity, $sinceId, 20);
+			$nowId = $sinceId;
+			if (is_array($rows)) {
+				foreach ($rows as $r) {
+					$nowId = max($nowId, (int) $r->rowid);
+					$newItems[] = array(
+						'rowid'         => (int) $r->rowid,
+						'type'          => $r->type,
+						'category'      => $r->category,
+						'title'         => dolinotif_resolve_title($langs, $r),
+						'message'       => $r->message,
+						'url'           => dolinotifSanitizeUrl($r->url),
+						'element_type'  => $r->element_type,
+						'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
+						'is_read'       => (int) $r->is_read,
+						'date_creation' => $r->date_creation,
+						'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
+					);
+				}
+			}
+		} elseif (!empty($since)) {
+			// Legacy timestamp cursor (kept for cached JS during rollout).
 			// Accept ISO 'YYYY-MM-DDTHH:MM:SS' and 'YYYY-MM-DD HH:MM:SS'
 			$since = str_replace('T', ' ', $since);
 			// Strip anything that isn't a safe datetime char
@@ -157,7 +185,7 @@ switch ($action) {
 							'category'      => $r->category,
 							'title'         => dolinotif_resolve_title($langs, $r),
 							'message'       => $r->message,
-							'url'           => $r->url,
+							'url'           => dolinotifSanitizeUrl($r->url),
 							'element_type'  => $r->element_type,
 							'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
 							'is_read'       => (int) $r->is_read,
@@ -171,11 +199,17 @@ switch ($action) {
 				}
 			}
 		}
+		if ($nowId <= 0) {
+			// First poll (or legacy path): initialise the cursor at the
+			// user's current max rowid so history isn't replayed as "new".
+			$nowId = max(0, (int) $notif->latestId($fk_user, $entity));
+		}
 
 		dolinotif_json_out(array(
 			'unread' => (int) $unread,
 			'new'    => $newItems,
 			'now'    => dol_print_date(dol_now(), '%Y-%m-%d %H:%M:%S'),
+			'now_id' => $nowId,
 		));
 		break;
 
@@ -199,7 +233,9 @@ switch ($action) {
 				'category'      => $r->category,
 				'title'         => dolinotif_resolve_title($langs, $r),
 				'message'       => $r->message,
-				'url'           => $r->url,
+				// Sanitized at read too: covers rows stored before the
+				// write-time filter existed.
+				'url'           => dolinotifSanitizeUrl($r->url),
 				'element_type'  => $r->element_type,
 				'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
 				'is_read'       => (int) $r->is_read,
