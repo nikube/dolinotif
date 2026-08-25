@@ -5,3 +5,4 @@
 
 ALTER TABLE llx_dolinotif ADD INDEX idx_dolinotif_fk_user (fk_user, is_read, entity);
 ALTER TABLE llx_dolinotif ADD INDEX idx_dolinotif_date (date_creation);
+ALTER TABLE llx_dolinotif ADD INDEX idx_dolinotif_user_cursor (entity, fk_user, rowid);

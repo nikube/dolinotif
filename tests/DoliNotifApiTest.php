@@ -47,6 +47,13 @@ final class DoliNotifApiTest extends DoliTestCase
 		$this->assertLessThan(0, $rowid, 'Missing title should yield a negative return');
 	}
 
+	public function testPublicErrorMessages(): void
+	{
+		$this->assertSame('Invalid target user', dolinotifErrorMessage(DOLINOTIF_ERROR_INVALID_USER));
+		$this->assertSame('Unable to create notification', dolinotifErrorMessage(DOLINOTIF_ERROR_DATABASE));
+		$this->assertSame('', dolinotifErrorMessage(123));
+	}
+
 	public function testUnreadCountIncreasesAfterSend(): void
 	{
 		$before = $this->countRows('dolinotif', "fk_user = ".(int) $this->user->id." AND is_read = 0");

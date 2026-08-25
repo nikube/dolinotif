@@ -26,6 +26,38 @@
 dol_include_once('/dolinotif/class/dolinotification.class.php');
 
 
+/** Public API error codes returned by dolinotifSend(). */
+const DOLINOTIF_ERROR_INVALID_DATABASE = -1;
+const DOLINOTIF_ERROR_INVALID_USER = -2;
+const DOLINOTIF_ERROR_INVALID_PAYLOAD = -3;
+const DOLINOTIF_ERROR_MISSING_TITLE = -4;
+const DOLINOTIF_ERROR_DATABASE = -5;
+
+
+/**
+ * Return a stable, untranslated diagnostic for a dolinotifSend() result.
+ *
+ * This lets calling modules log a useful reason without depending on the
+ * internals of DoliNotification. An empty string means that the result is not
+ * a known error code.
+ *
+ * @param int $code Return value from dolinotifSend()
+ * @return string Diagnostic suitable for logs
+ */
+function dolinotifErrorMessage($code)
+{
+	$messages = array(
+		DOLINOTIF_ERROR_INVALID_DATABASE => 'Invalid database handler',
+		DOLINOTIF_ERROR_INVALID_USER => 'Invalid target user',
+		DOLINOTIF_ERROR_INVALID_PAYLOAD => 'Invalid notification payload',
+		DOLINOTIF_ERROR_MISSING_TITLE => 'Notification title is required',
+		DOLINOTIF_ERROR_DATABASE => 'Unable to create notification',
+	);
+
+	return isset($messages[(int) $code]) ? $messages[(int) $code] : '';
+}
+
+
 /**
  *	Sanitize a notification URL. The frontend puts this value in an href AND
  *	assigns it to window.location.href, so a stored javascript: (or other
@@ -73,6 +105,7 @@ function dolinotifSanitizeUrl($url)
  *	@param	int		$fk_user	Target user rowid
  *	@param	array<string,mixed>	$params		Notification payload:
  *		- title        (string, required)
+ *		- title_i18n   (array, optional: key, file and params; translated for the viewer)
  *		- message      (string, optional)
  *		- type         (string: info|success|warning|error, default: info)
  *		- category     (string, optional, e.g. 'bgjob')
@@ -88,17 +121,17 @@ function dolinotifSend($db, $fk_user, $params)
 	global $conf;
 
 	if (!is_object($db)) {
-		return -1;
+		return DOLINOTIF_ERROR_INVALID_DATABASE;
 	}
 	$fk_user = (int) $fk_user;
 	if ($fk_user <= 0) {
-		return -2;
+		return DOLINOTIF_ERROR_INVALID_USER;
 	}
 	if (!is_array($params)) {
-		return -3;
+		return DOLINOTIF_ERROR_INVALID_PAYLOAD;
 	}
 	if (empty($params['title'])) {
-		return -4;
+		return DOLINOTIF_ERROR_MISSING_TITLE;
 	}
 
 	$notif = new DoliNotification($db);
@@ -118,6 +151,10 @@ function dolinotifSend($db, $fk_user, $params)
 	$notif->fk_element  = isset($params['fk_element']) ? (int) $params['fk_element'] : null;
 
 	$res = $notif->create();
+	if ($res < 0) {
+		dol_syslog('dolinotifSend: '.$notif->error, LOG_ERR);
+		return DOLINOTIF_ERROR_DATABASE;
+	}
 
 	// HOOK: dolinotif_after_send — for email fallback, broadcast expansion (premium)
 	// Premium version will dispatch here to queue an email if unread after X minutes,

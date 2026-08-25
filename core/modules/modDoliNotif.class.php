@@ -189,6 +189,11 @@ class modDoliNotif extends DolibarrModules
 			'sql' => "ALTER TABLE ".MAIN_DB_PREFIX."dolinotif ADD COLUMN title_i18n TEXT AFTER title",
 			'ignoreerror' => 1,
 		);
+		// v1.1 migration: support user/entity-scoped row-id polling efficiently.
+		$sql[] = array(
+			'sql' => "ALTER TABLE ".MAIN_DB_PREFIX."dolinotif ADD INDEX idx_dolinotif_user_cursor (entity, fk_user, rowid)",
+			'ignoreerror' => 1,
+		);
 
 		return $this->_init($sql, $options);
 	}
