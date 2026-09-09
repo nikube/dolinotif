@@ -96,6 +96,30 @@ function dolinotifSanitizeUrl($url)
 
 
 /**
+ *	URL as the browser must receive it. Paths starting with '/' are relative
+ *	to the Dolibarr root (the API contract), so they get DOL_URL_ROOT
+ *	prepended when the instance is served from a sub-directory — unless the
+ *	sender already built them with dol_buildpath(). Absolute http(s) URLs
+ *	and page-relative paths ('card.php?id=1') are left alone.
+ *
+ *	@param	mixed	$url	Stored URL value
+ *	@param	string	$root	Web root (DOL_URL_ROOT); parameter for tests
+ *	@return	string|null		Safe URL for href/location, or null
+ */
+function dolinotifDisplayUrl($url, $root = DOL_URL_ROOT)
+{
+	$url = dolinotifSanitizeUrl($url);
+	if ($url === null || $root === '' || strpos($url, '/') !== 0) {
+		return $url;
+	}
+	if ($url === $root || strpos($url, $root.'/') === 0 || strpos($url, $root.'?') === 0) {
+		return $url;
+	}
+	return $root.$url;
+}
+
+
+/**
  *	Send an in-app notification.
  *
  *	This is the ONLY public entry point for other modules to push notifications
@@ -109,8 +133,9 @@ function dolinotifSanitizeUrl($url)
  *		- message      (string, optional)
  *		- type         (string: info|success|warning|error, default: info)
  *		- category     (string, optional, e.g. 'bgjob')
- *		- url          (string, optional, relative Dolibarr path or http(s) URL;
- *		                other schemes are dropped — see dolinotifSanitizeUrl())
+ *		- url          (string, optional, path relative to the Dolibarr root
+ *		                ('/compta/facture/card.php?id=1', DOL_URL_ROOT added at
+ *		                display) or http(s) URL; other schemes are dropped)
  *		- element_type (string, optional)
  *		- fk_element   (int, optional)
  *		- entity       (int, optional, defaults to current entity)

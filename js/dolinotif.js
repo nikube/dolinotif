@@ -145,8 +145,14 @@
 		 * delivered across successive polls instead of being skipped when the
 		 * cursor jumps to "now". */
 
+		// -1 = no cursor yet (new tab); 0 is a real cursor (user had no row).
 		function getLastId() {
-			try { return parseInt(sessionStorage.getItem('dolinotif_lastId') || '0', 10) || 0; } catch (e) { return 0; }
+			try {
+				var v = sessionStorage.getItem('dolinotif_lastId');
+				if (v === null) return -1;
+				var n = parseInt(v, 10);
+				return isNaN(n) ? -1 : n;
+			} catch (e) { return -1; }
 		}
 		function setLastId(v) {
 			try { sessionStorage.setItem('dolinotif_lastId', String(v | 0)); } catch (e) {}
@@ -277,12 +283,14 @@
 		}
 
 		function refreshCount() {
+			if (document.hidden) return; // resumed by visibilitychange below
 			var sinceId = getLastId();
 			var url = AJAX_URL + '?action=count';
-			if (sinceId > 0) url += '&since_id=' + sinceId;
+			if (sinceId >= 0) url += '&since_id=' + sinceId;
 			xhrGet(url, function (err, data) {
 				if (err || !data) return;
 				setBadge(data.unread | 0);
+				if (data.token) TOKEN = data.token;
 				if (typeof data.now_id !== 'undefined') setLastId(data.now_id);
 				if (data['new'] && data['new'].length) {
 					autoOpenDropdown();
@@ -356,8 +364,12 @@
 			});
 		}
 
-		// Initial check + polling
+		// Initial check + polling (skipped while the tab is hidden, caught up
+		// as soon as it is shown again).
 		refreshCount();
 		setInterval(refreshCount, POLLING * 1000);
+		document.addEventListener('visibilitychange', function () {
+			if (!document.hidden) refreshCount();
+		});
 	});
 })();

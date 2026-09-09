@@ -58,7 +58,7 @@ class modDoliNotif extends DolibarrModules
 		$this->module_position = '50';
 		$this->name = preg_replace('/^mod/i', '', get_class($this));
 
-		$this->description = "In-app notification center (bell icon, badge, dropdown, toast)";
+		$this->description = "In-app notification center (bell icon, badge, drawer that opens on new notifications)";
 		$this->descriptionlong = "DoliNotif provides an in-app notification center for Dolibarr. Other modules push notifications through a single public API function dolinotifSend().";
 
 		$this->editor_name = 'DoliNotif';
@@ -73,7 +73,6 @@ class modDoliNotif extends DolibarrModules
 			'js'  => array('/dolinotif/js/dolinotif.js'),
 			'hooks' => array(
 				'data' => array(
-					'main',
 					'toprightmenu',
 				),
 				'entity' => '0',

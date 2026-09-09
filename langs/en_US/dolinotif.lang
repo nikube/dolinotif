@@ -16,7 +16,7 @@ DoliNotifSetupTitle=DoliNotif — setup
 DoliNotifPollingInterval=Polling interval (seconds)
 DoliNotifPollingIntervalHelp=How often the browser checks for new notifications (minimum 5s).
 DoliNotifRetentionDays=Retention (days)
-DoliNotifRetentionDaysHelp=Read notifications older than this are auto-purged by the daily cron job.
+DoliNotifRetentionDaysHelp=Read notifications older than this (unread ones older than twice this) are auto-purged by the daily cron job.
 DoliNotifMaxDropdown=Max items in dropdown
 DoliNotifMaxDropdownHelp=Maximum number of notifications displayed in the bell dropdown.
 

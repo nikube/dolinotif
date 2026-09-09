@@ -107,6 +107,12 @@ class DoliNotification
 
 		$entity = ($this->entity !== null && $this->entity !== '') ? (int) $this->entity : (int) $conf->entity;
 		$now = $this->db->idate(dol_now());
+		// Column widths: a long job label or URL must shorten the row, not
+		// make the INSERT fail (strict SQL mode) and lose the notification.
+		$this->title = mb_substr((string) $this->title, 0, 255);
+		$this->url = $this->url === null ? null : mb_substr((string) $this->url, 0, 500);
+		$this->category = $this->category === null ? null : mb_substr((string) $this->category, 0, 50);
+		$this->element_type = $this->element_type === null ? null : mb_substr((string) $this->element_type, 0, 50);
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."dolinotif (";
 		$sql .= "entity, fk_user, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
@@ -207,7 +213,10 @@ class DoliNotification
 	}
 
 	/**
-	 *	List notifications for a user (most recent first).
+	 *	List notifications for a user: unread first, then most recent. The
+	 *	dropdown shows a handful of rows and opening it marks everything
+	 *	read, so an unread row older than the page would otherwise be
+	 *	counted, then marked read, without ever being displayed.
 	 *
 	 *	@param	int		$fk_user	Owner user id
 	 *	@param	int		$entity		Entity
@@ -228,42 +237,7 @@ class DoliNotification
 		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE fk_user = ".(int) $fk_user;
 		$sql .= " AND entity = ".(int) $entity;
-		$sql .= " ORDER BY date_creation DESC, rowid DESC";
-		$sql .= " LIMIT ".$limit;
-
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			$this->error = $this->db->lasterror();
-			return -1;
-		}
-		$out = array();
-		while ($obj = $this->db->fetch_object($resql)) {
-			$out[] = $obj;
-		}
-		return $out;
-	}
-
-	/**
-	 *	List notifications newer than a given datetime for a user.
-	 *
-	 *	@param	int		$fk_user	Owner user id
-	 *	@param	int		$entity		Entity
-	 *	@param	string	$since		ISO-like datetime 'YYYY-MM-DD HH:MM:SS'
-	 *	@param	int		$limit		Max rows (sanity cap)
-	 *	@return	array<int,object>|int	Array of rows or <0 on error
-	 */
-	public function listNewSince($fk_user, $entity, $since, $limit = 20)
-	{
-		$limit = (int) $limit;
-		if ($limit <= 0 || $limit > 100) {
-			$limit = 20;
-		}
-		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
-		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
-		$sql .= " WHERE fk_user = ".(int) $fk_user;
-		$sql .= " AND entity = ".(int) $entity;
-		$sql .= " AND date_creation > '".$this->db->escape($since)."'";
-		$sql .= " ORDER BY date_creation DESC, rowid DESC";
+		$sql .= " ORDER BY is_read ASC, rowid DESC";
 		$sql .= " LIMIT ".$limit;
 
 		$resql = $this->db->query($sql);
@@ -339,8 +313,9 @@ class DoliNotification
 	}
 
 	/**
-	 *	Auto-purge read notifications older than DOLINOTIF_RETENTION_DAYS.
-	 *	Called by the daily cron job.
+	 *	Auto-purge notifications: read ones older than DOLINOTIF_RETENTION_DAYS,
+	 *	unread ones older than twice that (a user who never opens the bell,
+	 *	or has left, must not accumulate rows forever). Daily cron job.
 	 *
 	 *	@return	int		>=0 deleted rows, <0 on error
 	 */
@@ -355,9 +330,9 @@ class DoliNotification
 		// multicompany, so a cron tick must only purge the entities whose
 		// retention setting it just read.
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."dolinotif";
-		$sql .= " WHERE date_creation < DATE_SUB(NOW(), INTERVAL ".$retention." DAY)";
-		$sql .= " AND is_read = 1";
-		$sql .= " AND entity IN (".getEntity('dolinotif').")";
+		$sql .= " WHERE entity IN (".getEntity('dolinotif').")";
+		$sql .= " AND ((is_read = 1 AND date_creation < DATE_SUB(NOW(), INTERVAL ".$retention." DAY))";
+		$sql .= " OR date_creation < DATE_SUB(NOW(), INTERVAL ".(2 * $retention)." DAY))";
 
 		if (!$this->db->query($sql)) {
 			$this->error = $this->db->lasterror();

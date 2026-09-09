@@ -1,8 +1,9 @@
 # DoliNotif
 
 In-app notification center for Dolibarr. Bell icon in the top bar, badge counter,
-rich dropdown, toast on page load. Other modules push notifications via a single
-public function. No email, no triggers — just a mailbox that modules feed into.
+a drawer that opens by itself when a notification arrives (unread first). Other
+modules push notifications via a single public function. No email, no triggers —
+just a mailbox that modules feed into.
 
 License: **GPL v3 + Commons Clause** (free, but you may not sell the Software).
 
@@ -12,7 +13,7 @@ Requires: Dolibarr 23.0+ and PHP 8.1+.
 
 1. Copy this folder to `htdocs/custom/dolinotif/`.
 2. In Dolibarr: Setup → Modules/Applications → enable **DoliNotif**.
-3. (Optional) Adjust polling interval, retention, bell position at Setup →
+3. (Optional) Adjust polling interval, retention and drawer size at Setup →
    DoliNotif.
 
 The module creates `llx_dolinotif` and a daily cron job that purges read
@@ -74,7 +75,7 @@ The complete payload accepts:
 | `message` | no | Additional text |
 | `type` | no | `info`, `success`, `warning`, or `error` |
 | `category` | no | Free-form source/category tag |
-| `url` | no | Relative Dolibarr path or absolute HTTP(S) URL |
+| `url` | no | Path relative to the Dolibarr root (`/compta/facture/card.php?id=42`, `DOL_URL_ROOT` is added at display time, `dol_buildpath()` output is accepted too) or absolute HTTP(S) URL |
 | `element_type` | no | Related Dolibarr object type |
 | `fk_element` | no | Related object row ID |
 | `entity` | no | Target entity; current entity by default |

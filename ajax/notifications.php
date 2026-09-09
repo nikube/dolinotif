@@ -121,6 +121,34 @@ function dolinotif_resolve_title($langs, $r)
 	return (string) $r->title;
 }
 
+/**
+ * One notification row as the JS expects it.
+ *
+ * @param  Translate $langs  Viewer's translator
+ * @param  DoliDB    $db
+ * @param  object    $r      Notification row
+ * @return array
+ */
+function dolinotif_row_out($langs, $db, $r)
+{
+	return array(
+		'rowid'         => (int) $r->rowid,
+		'type'          => $r->type,
+		'category'      => $r->category,
+		'title'         => dolinotif_resolve_title($langs, $r),
+		'message'       => $r->message,
+		// Sanitized at read too (rows stored before the write-time filter)
+		// and made absolute to the Dolibarr root.
+		'url'           => dolinotifDisplayUrl($r->url),
+		'element_type'  => $r->element_type,
+		'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
+		'is_read'       => (int) $r->is_read,
+		'date_creation' => $r->date_creation,
+		// Server-computed age: browser-TZ-proof (raw DB datetimes are server TZ).
+		'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
+	);
+}
+
 // Auth
 if (empty($user) || !is_object($user) || $user->id <= 0) {
 	dolinotif_json_out(array('error' => 'not_authenticated'), 401);
@@ -136,8 +164,6 @@ $notif = new DoliNotification($db);
 
 switch ($action) {
 	case 'count':
-		$since = GETPOST('since', 'alphanohtml');
-		$sinceId = GETPOSTINT('since_id');
 		$unread = $notif->countUnread($fk_user, $entity);
 		if ($unread < 0) {
 			dolinotif_json_out(array('error' => 'db_error'), 500);
@@ -145,71 +171,33 @@ switch ($action) {
 
 		$newItems = array();
 		$nowId = 0;
-		if ($sinceId > 0) {
-			// Row-id cursor (preferred): oldest-first with rowid > cursor, so
-			// a burst larger than the page size is delivered across
-			// successive polls instead of being skipped forever.
+		if (GETPOSTISSET('since_id')) {
+			// Row-id cursor: oldest-first with rowid > cursor, so a burst
+			// larger than the page size is delivered across successive polls
+			// instead of being skipped forever. A cursor of 0 is a real
+			// cursor (the user had no row yet), not a missing one.
+			$sinceId = max(0, GETPOSTINT('since_id'));
 			$rows = $notif->listNewSinceId($fk_user, $entity, $sinceId, 20);
 			$nowId = $sinceId;
 			if (is_array($rows)) {
 				foreach ($rows as $r) {
 					$nowId = max($nowId, (int) $r->rowid);
-					$newItems[] = array(
-						'rowid'         => (int) $r->rowid,
-						'type'          => $r->type,
-						'category'      => $r->category,
-						'title'         => dolinotif_resolve_title($langs, $r),
-						'message'       => $r->message,
-						'url'           => dolinotifSanitizeUrl($r->url),
-						'element_type'  => $r->element_type,
-						'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
-						'is_read'       => (int) $r->is_read,
-						'date_creation' => $r->date_creation,
-						'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
-					);
+					$newItems[] = dolinotif_row_out($langs, $db, $r);
 				}
 			}
-		} elseif (!empty($since)) {
-			// Legacy timestamp cursor (kept for cached JS during rollout).
-			// Accept ISO 'YYYY-MM-DDTHH:MM:SS' and 'YYYY-MM-DD HH:MM:SS'
-			$since = str_replace('T', ' ', $since);
-			// Strip anything that isn't a safe datetime char
-			if (preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $since, $m)) {
-				$since = $m[1];
-				$rows = $notif->listNewSince($fk_user, $entity, $since, 20);
-				if (is_array($rows)) {
-					foreach ($rows as $r) {
-						$newItems[] = array(
-							'rowid'         => (int) $r->rowid,
-							'type'          => $r->type,
-							'category'      => $r->category,
-							'title'         => dolinotif_resolve_title($langs, $r),
-							'message'       => $r->message,
-							'url'           => dolinotifSanitizeUrl($r->url),
-							'element_type'  => $r->element_type,
-							'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
-							'is_read'       => (int) $r->is_read,
-							'date_creation' => $r->date_creation,
-							// Server-computed age: browser-TZ-proof (raw DB
-							// datetimes are server TZ; parsing them client-side
-							// shifted every timestamp by the TZ offset).
-							'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
-						);
-					}
-				}
-			}
-		}
-		if ($nowId <= 0) {
-			// First poll (or legacy path): initialise the cursor at the
-			// user's current max rowid so history isn't replayed as "new".
+		} else {
+			// No cursor (new tab): start at the user's current max rowid so
+			// history isn't replayed as "new".
 			$nowId = max(0, (int) $notif->latestId($fk_user, $entity));
 		}
-
 		dolinotif_json_out(array(
 			'unread' => (int) $unread,
 			'new'    => $newItems,
 			'now'    => dol_print_date(dol_now(), '%Y-%m-%d %H:%M:%S'),
 			'now_id' => $nowId,
+			// Dolibarr rotates the CSRF token on every page load: a tab left
+			// open while the user browses elsewhere would post a stale one.
+			'token'  => newToken(),
 		));
 		break;
 
@@ -227,21 +215,7 @@ switch ($action) {
 		}
 		$out = array();
 		foreach ($rows as $r) {
-			$out[] = array(
-				'rowid'         => (int) $r->rowid,
-				'type'          => $r->type,
-				'category'      => $r->category,
-				'title'         => dolinotif_resolve_title($langs, $r),
-				'message'       => $r->message,
-				// Sanitized at read too: covers rows stored before the
-				// write-time filter existed.
-				'url'           => dolinotifSanitizeUrl($r->url),
-				'element_type'  => $r->element_type,
-				'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
-				'is_read'       => (int) $r->is_read,
-				'date_creation' => $r->date_creation,
-				'age'           => max(0, dol_now() - (int) $db->jdate($r->date_creation)),
-			);
+			$out[] = dolinotif_row_out($langs, $db, $r);
 		}
 		dolinotif_json_out($out);
 		break;

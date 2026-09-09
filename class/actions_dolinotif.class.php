@@ -20,10 +20,133 @@
 /**
  *	\file       class/actions_dolinotif.class.php
  *	\ingroup    dolinotif
- *	\brief      Framework glue: Dolibarr's HookManager auto-loads
- *	            /{module}/class/actions_{module}.class.php and instantiates
- *	            Actions{ucfirst(module)}. The actual implementation lives in
- *	            core/hooks/hookDoliNotif.class.php (per spec file structure).
+ *	\brief      Hook: inject the bell icon into the top-right menu.
  */
 
-require_once __DIR__.'/../core/hooks/hookDoliNotif.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php';
+dol_include_once('/dolinotif/class/dolinotification.class.php');
+
+/**
+ *	Class ActionsDolinotif — injects the notification bell into the top menu
+ *	(HookManager loads /dolinotif/class/actions_dolinotif.class.php).
+ */
+class ActionsDolinotif extends CommonHookActions
+{
+	/**
+	 * @var DoliDB
+	 */
+	public $db;
+
+	/**
+	 * @var string
+	 */
+	public $error = '';
+
+	/**
+	 * @var string[]
+	 */
+	public $errors = array();
+
+	/**
+	 * @var mixed[]
+	 */
+	public $results = array();
+
+	/**
+	 * @var ?string
+	 */
+	public $resprints;
+
+	/**
+	 * @var int
+	 */
+	public $priority;
+
+	/**
+	 *	Constructor
+	 *
+	 *	@param	DoliDB	$db		Database handler
+	 */
+	public function __construct($db)
+	{
+		$this->db = $db;
+	}
+
+	/**
+	 *	Hook: printTopRightMenu — add the bell icon + dropdown container.
+	 *
+	 *	@param	array<string,mixed>	$parameters		Hook parameters
+	 *	@param	?CommonObject		$object			(unused)
+	 *	@param	?string				$action			(unused)
+	 *	@param	?HookManager		$hookmanager	Hook manager
+	 *	@return	int									0 to append, 1 to replace
+	 */
+	public function printTopRightMenu($parameters, &$object, &$action, $hookmanager)
+	{
+		global $conf, $langs, $user;
+
+		$this->resprints = '';
+
+		if (!isModEnabled('dolinotif')) {
+			return 0;
+		}
+		if (empty($user) || $user->id <= 0) {
+			return 0;
+		}
+
+		$langs->load('dolinotif@dolinotif');
+
+		$unread = max(0, (new DoliNotification($this->db))->countUnread((int) $user->id, (int) $conf->entity));
+
+		$badgeDisplay = $unread > 0 ? '' : ' style="display:none;"';
+		$badgeLabel   = $unread > 99 ? '99+' : (string) $unread;
+
+		$ajaxUrl = DOL_URL_ROOT.'/custom/dolinotif/ajax/notifications.php';
+		$token = newToken();
+
+		// Translated JS labels (transnoentities: real UTF-8, the JS escapes).
+		$jsLabels = json_encode(array(
+			'noNotifications'   => $langs->transnoentities('DoliNotifNoNotifications'),
+			'loadError'         => $langs->transnoentities('DoliNotifLoadError'),
+			'now'               => $langs->transnoentities('DoliNotifJustNow'),
+			// trans() sprintf's %s away even with no params — feed it a
+			// placeholder the JS substitutes with the computed number.
+			'minutesAgo'        => $langs->transnoentities('DoliNotifMinutesAgo', '__N__'),
+			'hoursAgo'          => $langs->transnoentities('DoliNotifHoursAgo', '__N__'),
+			'daysAgo'           => $langs->transnoentities('DoliNotifDaysAgo', '__N__'),
+			'moreNotifications' => $langs->transnoentities('DoliNotifMore'),
+		));
+
+		$html = '';
+		$html .= '<div class="login_block_elem dolinotif-wrap" id="dolinotif-wrap"'
+			.' data-ajax="'.dol_escape_htmltag($ajaxUrl).'"'
+			.' data-token="'.dol_escape_htmltag($token).'"'
+			.' data-polling="'.(int) getDolGlobalInt('DOLINOTIF_POLLING_INTERVAL', 30).'"'
+			.' data-max="'.(int) getDolGlobalInt('DOLINOTIF_MAX_DROPDOWN', 15).'"'
+			.' data-labels="'.dol_escape_htmltag($jsLabels).'">';
+
+		// Bell button — use Dolibarr-standard classes (atoplogin valignmiddle)
+		// so it aligns with the other top-right icons (bookmarks, help, logout).
+		// The badge is anchored to an inner wrapper around the icon glyph so
+		// it overlaps the bell itself, not the (padded) anchor box.
+		$html .= '<a href="#" class="login dolinotif-bell" id="dolinotif-bell" title="'.dol_escape_htmltag($langs->trans('DoliNotifNotifications')).'">';
+		$html .= '<span class="dolinotif-bell-icon">';
+		$html .= '<span class="fa fa-bell atoplogin valignmiddle" aria-hidden="true"></span>';
+		$html .= '<span class="dolinotif-badge" id="dolinotif-badge"'.$badgeDisplay.'>'.dol_escape_htmltag($badgeLabel).'</span>';
+		$html .= '</span>';
+		$html .= '</a>';
+
+		// Dropdown (populated by JS). No header: the list speaks for itself,
+		// and opening the panel marks everything as read (JS).
+		$html .= '<div class="dolinotif-dropdown" id="dolinotif-dropdown" style="display:none;">';
+		$html .= '  <div class="dolinotif-list" id="dolinotif-list">';
+		$html .= '    <div class="dolinotif-empty">'.dol_escape_htmltag($langs->trans('DoliNotifLoading')).'</div>';
+		$html .= '  </div>';
+		$html .= '</div>';
+
+		$html .= '</div>';
+
+		$this->resprints = $html;
+		return 0;
+	}
+}
