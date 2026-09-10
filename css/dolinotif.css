@@ -184,7 +184,9 @@
 /* Legacy elements kept hidden — the whole row is clickable */
 .dolinotif-link { display: none; }
 .dolinotif-actions { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px; }
-.dolinotif-action {
+/* #id prefix: the drawer sits inside the top bar's login block, whose
+   theme rule paints every link white. */
+#dolinotif-dropdown .dolinotif-action {
 	display: inline-block;
 	padding: 2px 9px;
 	border: 1px solid rgba(15, 23, 42, 0.12);
@@ -194,5 +196,5 @@
 	text-decoration: none;
 	background: #fff;
 }
-.dolinotif-action:hover { border-color: #64748b; color: #0f172a; }
+#dolinotif-dropdown .dolinotif-action:hover { border-color: #64748b; color: #0f172a; }
 .dolinotif-dot  { display: none; }
