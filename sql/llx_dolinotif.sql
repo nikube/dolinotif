@@ -17,6 +17,7 @@ CREATE TABLE llx_dolinotif (
 	title_i18n      TEXT,
 	message         TEXT,
 	url             VARCHAR(500),
+	links           TEXT,
 	element_type    VARCHAR(50),
 	fk_element      INTEGER,
 	is_read         TINYINT DEFAULT 0 NOT NULL,

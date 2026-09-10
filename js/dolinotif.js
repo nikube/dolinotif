@@ -222,6 +222,13 @@
 					html += '      <span class="dolinotif-tag">' + escapeHtml(it.category) + '</span>';
 				}
 				html += '    </div>';
+				if (it.links && it.links.length) {
+					html += '    <div class="dolinotif-actions">';
+					for (var j = 0; j < it.links.length; j++) {
+						html += '<a href="' + escapeHtml(it.links[j].url) + '" class="dolinotif-action" data-id="' + (it.rowid | 0) + '">' + escapeHtml(it.links[j].label) + '</a>';
+					}
+					html += '    </div>';
+				}
 				html += '  </div>';
 				if (!it.is_read) {
 					html += '  <span class="dolinotif-unread-dot" aria-hidden="true"></span>';
@@ -340,12 +347,12 @@
 		if (listEl) {
 			listEl.addEventListener('click', function (e) {
 				var linkEl = e.target;
-				while (linkEl && linkEl !== listEl && !linkEl.classList.contains('dolinotif-link') && !linkEl.classList.contains('dolinotif-item')) {
+				while (linkEl && linkEl !== listEl && !linkEl.classList.contains('dolinotif-link') && !linkEl.classList.contains('dolinotif-action') && !linkEl.classList.contains('dolinotif-item')) {
 					linkEl = linkEl.parentNode;
 				}
 				if (!linkEl || linkEl === listEl) return;
 
-				if (linkEl.classList.contains('dolinotif-link')) {
+				if (linkEl.classList.contains('dolinotif-link') || linkEl.classList.contains('dolinotif-action')) {
 					// Link icon: mark read, then let browser follow href.
 					e.preventDefault();
 					var lid = parseInt(linkEl.getAttribute('data-id') || '0', 10);

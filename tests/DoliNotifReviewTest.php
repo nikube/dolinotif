@@ -88,6 +88,30 @@ final class DoliNotifReviewTest extends DoliTestCase
 		$this->assertTableLacks('dolinotif', "rowid = ".$unreadExpired, 'Unread rows are not kept forever');
 	}
 
+	public function testLinksAreStoredSanitizedAndResolvedForTheViewer(): void
+	{
+		global $langs;
+		$id = dolinotifSend($this->db, (int) $this->user->id, array(
+			'title' => $this->tag.' links',
+			'links' => array(
+				array('label' => 'PDF', 'url' => '/document.php?modulepart=facture&file=x.pdf'),
+				array('label' => 'Bad', 'url' => 'javascript:alert(1)'),
+				array('key' => 'DoliNotifNotifications', 'file' => 'dolinotif@dolinotif', 'url' => '/custom/doliflow/run.php?id=1'),
+			),
+		));
+		$this->assertGreaterThan(0, $id);
+		$rows = (new DoliNotification($this->db))->listForUser((int) $this->user->id, (int) $GLOBALS['conf']->entity, 200);
+		$row = null;
+		foreach ($rows as $r) { if ((int) $r->rowid === $id) { $row = $r; } }
+		$this->assertNotNull($row);
+		$links = dolinotif_resolve_links($langs, $row);
+		$this->assertCount(2, $links, 'javascript: link dropped');
+		$this->assertSame('PDF', $links[0]['label']);
+		$this->assertSame($langs->transnoentities('DoliNotifNotifications'), $links[1]['label'], 'key translated for the viewer');
+		$this->assertNotSame('DoliNotifNotifications', $links[1]['label']);
+		$this->assertSame('/custom/doliflow/run.php?id=1', $links[1]['url']);
+	}
+
 	public function testMarkReadIsScopedToTheOwner(): void
 	{
 		$uid = (int) $this->user->id;

@@ -75,6 +75,7 @@ The complete payload accepts:
 | `message` | no | Additional text |
 | `type` | no | `info`, `success`, `warning`, or `error` |
 | `category` | no | Free-form source/category tag |
+| `links` | no | Action links under the row: `[{label, url, key?, file?}]`; `key`/`file` translate the label for the viewer, `url` follows the same rules as `url` |
 | `url` | no | Path relative to the Dolibarr root (`/compta/facture/card.php?id=42`, `DOL_URL_ROOT` is added at display time, `dol_buildpath()` output is accepted too) or absolute HTTP(S) URL |
 | `element_type` | no | Related Dolibarr object type |
 | `fk_element` | no | Related object row ID |

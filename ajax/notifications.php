@@ -95,33 +95,6 @@ function dolinotif_json_out($payload, $httpStatus = 200)
 }
 
 /**
- * Resolve a notification title in the VIEWER's language when a display-time
- * i18n payload is present (title_i18n JSON {key, file, params[]}); fall back
- * to the pre-rendered title (sender's language) otherwise.
- *
- * @param  Translate $langs  Viewer's translator
- * @param  object    $r      Notification row
- * @return string
- */
-function dolinotif_resolve_title($langs, $r)
-{
-	if (!empty($r->title_i18n)) {
-		$d = json_decode($r->title_i18n, true);
-		if (is_array($d) && !empty($d['key'])) {
-			if (!empty($d['file'])) {
-				$langs->load($d['file']);
-			}
-			$p = (isset($d['params']) && is_array($d['params'])) ? array_values($d['params']) : array();
-			$t = $langs->transnoentities($d['key'], ...$p);
-			if ($t !== $d['key']) {
-				return $t;
-			}
-		}
-	}
-	return (string) $r->title;
-}
-
-/**
  * One notification row as the JS expects it.
  *
  * @param  Translate $langs  Viewer's translator
@@ -140,6 +113,7 @@ function dolinotif_row_out($langs, $db, $r)
 		// Sanitized at read too (rows stored before the write-time filter)
 		// and made absolute to the Dolibarr root.
 		'url'           => dolinotifDisplayUrl($r->url),
+		'links'         => dolinotif_resolve_links($langs, $r),
 		'element_type'  => $r->element_type,
 		'fk_element'    => $r->fk_element !== null ? (int) $r->fk_element : null,
 		'is_read'       => (int) $r->is_read,

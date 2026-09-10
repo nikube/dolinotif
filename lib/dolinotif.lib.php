@@ -120,6 +120,64 @@ function dolinotifDisplayUrl($url, $root = DOL_URL_ROOT)
 
 
 /**
+ * Resolve a notification title in the VIEWER's language when a display-time
+ * i18n payload is present (title_i18n JSON {key, file, params[]}); fall back
+ * to the pre-rendered title (sender's language) otherwise.
+ *
+ * @param  Translate $langs  Viewer's translator
+ * @param  object    $r      Notification row
+ * @return string
+ */
+function dolinotif_resolve_title($langs, $r)
+{
+	if (!empty($r->title_i18n)) {
+		$d = json_decode($r->title_i18n, true);
+		if (is_array($d) && !empty($d['key'])) {
+			if (!empty($d['file'])) {
+				$langs->load($d['file']);
+			}
+			$p = (isset($d['params']) && is_array($d['params'])) ? array_values($d['params']) : array();
+			$t = $langs->transnoentities($d['key'], ...$p);
+			if ($t !== $d['key']) {
+				return $t;
+			}
+		}
+	}
+	return (string) $r->title;
+}
+
+/**
+ * Action links of a row, labels translated for the viewer, urls made absolute.
+ *
+ * @param  Translate $langs
+ * @param  object    $r
+ * @return array[]   [{label, url}]
+ */
+function dolinotif_resolve_links($langs, $r)
+{
+	$out = array();
+	$links = empty($r->links) ? null : json_decode((string) $r->links, true);
+	foreach (is_array($links) ? $links : array() as $link) {
+		$url = dolinotifDisplayUrl($link['url'] ?? null);
+		if ($url === null) {
+			continue;
+		}
+		$label = (string) ($link['label'] ?? '');
+		if (!empty($link['key'])) {
+			if (!empty($link['file'])) {
+				$langs->load($link['file']);
+			}
+			$t = $langs->transnoentities($link['key']);
+			if ($t !== $link['key'] || $label === '') {
+				$label = $t;
+			}
+		}
+		$out[] = array('label' => $label !== '' ? $label : $url, 'url' => $url);
+	}
+	return $out;
+}
+
+/**
  *	Send an in-app notification.
  *
  *	This is the ONLY public entry point for other modules to push notifications
@@ -136,6 +194,11 @@ function dolinotifDisplayUrl($url, $root = DOL_URL_ROOT)
  *		- url          (string, optional, path relative to the Dolibarr root
  *		                ('/compta/facture/card.php?id=1', DOL_URL_ROOT added at
  *		                display) or http(s) URL; other schemes are dropped)
+ *		- links        (array, optional) action links shown under the row, each
+ *		                array('label' => 'View PDF', 'url' => '/document.php?...',
+ *		                      'key' => 'LangKey', 'file' => 'file@module') — key/file
+ *		                translate the label for the viewer, label is the fallback;
+ *		                urls are sanitized like 'url'
  *		- element_type (string, optional)
  *		- fk_element   (int, optional)
  *		- entity       (int, optional, defaults to current entity)
@@ -172,6 +235,24 @@ function dolinotifSend($db, $fk_user, $params)
 	}
 	$notif->message     = isset($params['message']) ? (string) $params['message'] : null;
 	$notif->url         = isset($params['url']) ? dolinotifSanitizeUrl($params['url']) : null;
+	if (!empty($params['links']) && is_array($params['links'])) {
+		$links = array();
+		foreach ($params['links'] as $link) {
+			$url = is_array($link) && isset($link['url']) ? dolinotifSanitizeUrl($link['url']) : null;
+			if ($url === null) {
+				continue;
+			}
+			$links[] = array(
+				'label' => (string) ($link['label'] ?? ''),
+				'key'   => (string) ($link['key'] ?? ''),
+				'file'  => (string) ($link['file'] ?? ''),
+				'url'   => $url,
+			);
+		}
+		if (!empty($links)) {
+			$notif->links = json_encode($links, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+		}
+	}
 	$notif->element_type = isset($params['element_type']) ? (string) $params['element_type'] : null;
 	$notif->fk_element  = isset($params['fk_element']) ? (int) $params['fk_element'] : null;
 

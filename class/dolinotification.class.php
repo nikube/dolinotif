@@ -67,6 +67,8 @@ class DoliNotification
 	public $title_i18n;
 	public $message;
 	public $url;
+	/** @var ?string JSON [{label, key, file, url}] — action links rendered under the row, urls sanitized by the API */
+	public $links;
 	public $element_type;
 	public $fk_element;
 	public $is_read;
@@ -115,7 +117,7 @@ class DoliNotification
 		$this->element_type = $this->element_type === null ? null : mb_substr((string) $this->element_type, 0, 50);
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."dolinotif (";
-		$sql .= "entity, fk_user, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
+		$sql .= "entity, fk_user, type, category, title, title_i18n, message, url, links, element_type, fk_element, is_read, date_creation";
 		$sql .= ") VALUES (";
 		$sql .= (int) $entity;
 		$sql .= ", ".(int) $this->fk_user;
@@ -125,6 +127,7 @@ class DoliNotification
 		$sql .= ", ".($this->title_i18n !== null && $this->title_i18n !== '' ? "'".$this->db->escape($this->title_i18n)."'" : "NULL");
 		$sql .= ", ".($this->message !== null && $this->message !== '' ? "'".$this->db->escape($this->message)."'" : "NULL");
 		$sql .= ", ".($this->url !== null && $this->url !== '' ? "'".$this->db->escape($this->url)."'" : "NULL");
+		$sql .= ", ".($this->links !== null && $this->links !== '' ? "'".$this->db->escape($this->links)."'" : "NULL");
 		$sql .= ", ".($this->element_type !== null && $this->element_type !== '' ? "'".$this->db->escape($this->element_type)."'" : "NULL");
 		$sql .= ", ".(!empty($this->fk_element) ? (int) $this->fk_element : "NULL");
 		$sql .= ", 0";
@@ -233,7 +236,7 @@ class DoliNotification
 			$limit = 200;
 		}
 
-		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
+		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, links, element_type, fk_element, is_read, date_creation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE fk_user = ".(int) $fk_user;
 		$sql .= " AND entity = ".(int) $entity;
@@ -270,7 +273,7 @@ class DoliNotification
 		if ($limit <= 0 || $limit > 100) {
 			$limit = 20;
 		}
-		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, element_type, fk_element, is_read, date_creation";
+		$sql = "SELECT rowid, type, category, title, title_i18n, message, url, links, element_type, fk_element, is_read, date_creation";
 		$sql .= " FROM ".MAIN_DB_PREFIX."dolinotif";
 		$sql .= " WHERE fk_user = ".(int) $fk_user;
 		$sql .= " AND entity = ".(int) $entity;
